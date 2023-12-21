@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>ARKit Scanner</string>
+	<string>6DPoseEstimation</string>
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>
