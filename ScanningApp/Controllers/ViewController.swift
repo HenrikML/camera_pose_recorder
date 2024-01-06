@@ -8,6 +8,7 @@ Main view controller for the object scanning UI.
 import UIKit
 import SceneKit
 import ARKit
+import AVFoundation
 
 class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate, UIDocumentPickerDelegate {
     
@@ -33,6 +34,8 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate, UI
     internal var internalState: State = .startARSession
     
     internal var scan: Scan?
+    
+    internal var folderURL: URL?
     
     var referenceObjectToMerge: ARReferenceObject?
     var referenceObjectToTest: ARReferenceObject?

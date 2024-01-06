@@ -18,6 +18,7 @@ extension ViewController {
         case testing
     }
     
+    
     /// - Tag: ARObjectScanningConfiguration
     // The current state the application is in
     var state: State {
@@ -158,6 +159,7 @@ extension ViewController {
                 self.flashlightButton.isHidden = true
                 self.nextButton.setTitle("Scan", for: [])
             case .scanning:
+                self.startReferenceDataCapture()
                 self.displayInstruction(Message("Scan the object from all sides that you are " +
                     "interested in. Do not move the object while scanning!"))
                 if let boundingBox = scan.scannedObject.boundingBox {
