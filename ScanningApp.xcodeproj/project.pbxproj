@@ -25,6 +25,7 @@
 		39D6E980207A8956002CF536 /* DetectedPointCloud.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39D6E97F207A8956002CF536 /* DetectedPointCloud.swift */; };
 		39D6E984207B1D05002CF536 /* ViewController+ApplicationState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39D6E983207B1D05002CF536 /* ViewController+ApplicationState.swift */; };
 		39E6F85A200EE27800B278CA /* Utilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39E6F859200EE27800B278CA /* Utilities.swift */; };
+		4044065B2B4DC88E0044CC4C /* VideoRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4044065A2B4DC88E0044CC4C /* VideoRecorder.swift */; };
 		405EE4652B49AE3800FD9B68 /* ViewController+RefData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 405EE4642B49AE3800FD9B68 /* ViewController+RefData.swift */; };
 		C42056AE20C75C9D003754C1 /* Snapping.swift in Sources */ = {isa = PBXBuildFile; fileRef = C42056AD20C75C9D003754C1 /* Snapping.swift */; };
 		C4543844207F38460016097A /* art.scnassets in Resources */ = {isa = PBXBuildFile; fileRef = C4543843207F38460016097A /* art.scnassets */; };
@@ -66,6 +67,7 @@
 		39D6E97F207A8956002CF536 /* DetectedPointCloud.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetectedPointCloud.swift; sourceTree = "<group>"; };
 		39D6E983207B1D05002CF536 /* ViewController+ApplicationState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ViewController+ApplicationState.swift"; sourceTree = "<group>"; };
 		39E6F859200EE27800B278CA /* Utilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utilities.swift; sourceTree = "<group>"; };
+		4044065A2B4DC88E0044CC4C /* VideoRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoRecorder.swift; sourceTree = "<group>"; };
 		405EE4642B49AE3800FD9B68 /* ViewController+RefData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ViewController+RefData.swift"; sourceTree = "<group>"; };
 		8A2A1D055879AB6F2D13B830 /* LICENSE.txt */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = LICENSE.txt; sourceTree = "<group>"; };
 		AA284D3298D408760002CBBA /* SampleCode.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = SampleCode.xcconfig; path = Configuration/SampleCode.xcconfig; sourceTree = "<group>"; };
@@ -182,6 +184,7 @@
 				390033F9206F15F700C61E5D /* Scan.swift */,
 				39D6E976207A8878002CF536 /* TestRun.swift */,
 				405EE4642B49AE3800FD9B68 /* ViewController+RefData.swift */,
+				4044065A2B4DC88E0044CC4C /* VideoRecorder.swift */,
 			);
 			name = Controllers;
 			path = ScanningApp/Controllers;
@@ -315,6 +318,7 @@
 				C4B16A0820AF2DEE00BE6B5B /* FlashlightButton.swift in Sources */,
 				C47D1E1720B3763C00DC3FDE /* ViewController+SessionInfo.swift in Sources */,
 				390033FA206F15F700C61E5D /* Scan.swift in Sources */,
+				4044065B2B4DC88E0044CC4C /* VideoRecorder.swift in Sources */,
 				C47FEA4E20888B83008C1749 /* ThresholdPinchGestureRecognizer.swift in Sources */,
 				C47CE835207794880011A27B /* ObjectOriginAxis.swift in Sources */,
 				3947D3EA207543D500BDBE95 /* ScannedObject.swift in Sources */,

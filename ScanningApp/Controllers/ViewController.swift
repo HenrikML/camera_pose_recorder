@@ -48,6 +48,8 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate, UI
     
     internal var screenCenter = CGPoint()
     
+    internal var videoRecorder: VideoRecorder?
+    
     var modelURL: URL? {
         didSet {
             if let url = modelURL {

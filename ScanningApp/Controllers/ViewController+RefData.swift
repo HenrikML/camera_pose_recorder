@@ -7,16 +7,44 @@
 //
 
 import Foundation
+import AVFoundation
 
 extension ViewController
 {
-    func startReferenceDataCapture() {
-        createRefDataDirectory()
+    struct CameraMetadata {
+        var url:URL?
+        var cameraFPS:Double = 0
+        var cameraResolutionW:Int32 = 0
+        var cameraResolutionH:Int32 = 0
     }
     
-    func createRefDataDirectory() {
+    func startReferenceDataCapture() {
+        if createRefDataDirectory() {
+            guard let videoRecorder = videoRecorder else {
+                return
+            }
+            
+            if !videoRecorder.isRecording {
+                videoRecorder.startRecording()
+            }
+        }
+    }
+    
+    func stopReferenceDataCapture() {
+        guard let videoRecorder = videoRecorder else {
+            return
+        }
+        guard let folderURL = folderURL else {
+            return
+        }
+        if videoRecorder.isRecording {
+            videoRecorder.stopRecording(completion: folderURL)
+        }
+    }
+    
+    func createRefDataDirectory() -> Bool {
         let folderStr = "ref_" + getCurrentDateAsString()
-        guard let rootURL: URL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {return}
+        guard let rootURL: URL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {return false}
         
         self.folderURL = rootURL.appendingPathComponent(folderStr)
 
@@ -28,6 +56,7 @@ extension ViewController
         {
             fatalError("Could not create directory: \(String(describing: folderURL!.absoluteString))")
         }
+        return true
     }
     
     func getCurrentDateAsString() -> String
@@ -40,6 +69,7 @@ extension ViewController
         
         return dateFormatter.string(from: date)
     }
+    
     
 }
 
