@@ -133,6 +133,9 @@ extension ViewController {
         guard let scanState = notification.userInfo?[Scan.stateUserInfoKey] as? Scan.State else { return }
         
         DispatchQueue.main.async {
+            if (self.videoRecorder?.isRecording) != nil {
+                self.stopReferenceDataCapture()
+            }
             switch scanState {
             case .ready:
                 print("State: Ready to scan")

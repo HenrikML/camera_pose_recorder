@@ -8,6 +8,7 @@
 
 import Foundation
 import AVFoundation
+import ARKit
 
 extension ViewController
 {
@@ -20,25 +21,42 @@ extension ViewController
     
     func startReferenceDataCapture() {
         if createRefDataDirectory() {
-            guard let videoRecorder = videoRecorder else {
-                return
-            }
-            
-            if !videoRecorder.isRecording {
-                videoRecorder.startRecording()
+            let isRecording = self.videoRecorder?.isRecording ?? false
+            if !isRecording {
+                let settings = createSettings()
+                let transform = CGAffineTransformMakeRotation(CGFloat(Double.pi / 2))
+                self.videoRecorder = VideoRecorder(settings: settings, transform: transform)
+                
+                self.videoRecorder?.startRecording()
             }
         }
+    }
+    
+    func createSettings() -> [String: Any] {
+        let settings: [String: Any] = [
+            AVVideoCodecKey: AVVideoCodecType.h264,
+            AVVideoWidthKey: self.imgRes?.width ?? 1920,
+            AVVideoHeightKey: self.imgRes?.height ?? 1440,
+            AVVideoCompressionPropertiesKey: [
+                AVVideoPixelAspectRatioKey: [
+                    AVVideoPixelAspectRatioHorizontalSpacingKey: 1,
+                    AVVideoPixelAspectRatioVerticalSpacingKey: 1
+                ],
+                AVVideoMaxKeyFrameIntervalKey: 1,
+                AVVideoAverageBitRateKey: 16000000
+            ]
+        ]
+        
+        return settings
     }
     
     func stopReferenceDataCapture() {
         guard let videoRecorder = videoRecorder else {
             return
         }
-        guard let folderURL = folderURL else {
-            return
-        }
+        
         if videoRecorder.isRecording {
-            videoRecorder.stopRecording(completion: folderURL)
+            videoRecorder.stopRecording { videoURL in self.saveReferenceVideo(tempURL: videoURL) }
         }
     }
     
@@ -70,6 +88,61 @@ extension ViewController
         return dateFormatter.string(from: date)
     }
     
+    func saveReferenceVideo(tempURL: URL) {
+        debugPrint("Called function: saveReferenceVideo(url=\(tempURL.absoluteString)")
+        
+        var videoURL: URL?
+        if let folderURL = self.folderURL {
+            videoURL = folderURL.appendingPathComponent("video.mov")
+        }
+        
+        if FileManager.default.fileExists(atPath: tempURL.path) && FileManager.default.fileExists(atPath: tempURL.path) {
+            
+            do {
+                guard let videoURL = videoURL else {
+                    return
+                }
+                try FileManager.default.copyItem(atPath: tempURL.path, toPath: videoURL.path)
+                try FileManager.default.removeItem(atPath: tempURL.path)
+            } catch {}
+        }
+        
+    }
     
+    func getCMSampleBuffer(pixelBuffer: CVPixelBuffer, scale: CMTimeScale, pts: CMTime) -> CMSampleBuffer? {
+        var sampleBuffer: CMSampleBuffer?
+        var formatDescription: CMFormatDescription? = nil
+        var timingInfo = CMSampleTimingInfo(duration: .invalid, 
+                                            presentationTimeStamp: pts,
+                                            decodeTimeStamp: .invalid)
+        
+        
+        CMVideoFormatDescriptionCreateForImageBuffer(allocator: kCFAllocatorDefault, 
+                                                     imageBuffer: pixelBuffer,
+                                                     formatDescriptionOut: &formatDescription)
+        
+        CMSampleBufferCreateForImageBuffer(allocator: kCFAllocatorDefault,
+                                           imageBuffer: pixelBuffer,
+                                           dataReady: true,
+                                           makeDataReadyCallback: nil,
+                                           refcon: nil,
+                                           formatDescription: formatDescription!,
+                                           sampleTiming: &timingInfo,
+                                           sampleBufferOut: &sampleBuffer)
+        
+        return sampleBuffer
+    }
+    
+    func processFrame(_ frame: ARFrame) {
+        let scale = CMTimeScale(NSEC_PER_SEC)
+        let pts = CMTime(value: CMTimeValue(frame.timestamp * Double(scale)),
+                         timescale: scale)
+        let sampleBuffer: CMSampleBuffer? = getCMSampleBuffer(pixelBuffer: frame.capturedImage, scale: scale, pts: pts)
+        guard let sampleBuffer = sampleBuffer else {
+            return
+        }
+        
+        self.videoRecorder?.recordVideo(sampleBuffer)
+    }
 }
 

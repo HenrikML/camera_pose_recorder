@@ -37,7 +37,7 @@ class VideoRecorder {
     }
     
     func stopRecording(completion: @escaping (URL) -> Void) {
-        guard let assetWriter = assetWriter else {
+        guard let assetWriter = self.assetWriter else {
             return
         }
         
@@ -49,7 +49,7 @@ class VideoRecorder {
         }
     }
     
-    func recordVideo(sampleBuffer: CMSampleBuffer) {
+    func recordVideo(_ sampleBuffer: CMSampleBuffer) {
         guard isRecording,
               let assetWriter = assetWriter else {
             return
@@ -58,6 +58,7 @@ class VideoRecorder {
         if assetWriter.status == .unknown {
             assetWriter.startWriting()
             assetWriter.startSession(atSourceTime: CMSampleBufferGetPresentationTimeStamp(sampleBuffer))
+        
         } else if assetWriter.status == .writing {
             if let input = assetWriterInput,
                input.isReadyForMoreMediaData {

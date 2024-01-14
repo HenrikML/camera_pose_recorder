@@ -49,6 +49,8 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate, UI
     internal var screenCenter = CGPoint()
     
     internal var videoRecorder: VideoRecorder?
+    @objc internal dynamic var backCameraDeviceInput: AVCaptureDeviceInput?
+    
     
     var modelURL: URL? {
         didSet {
@@ -397,9 +399,20 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate, UI
     
     // MARK: - ARSessionDelegate
     
+    var cameraSettingsInit: Bool = true
+    var imgRes: CGSize?
+    
     func session(_ session: ARSession, cameraDidChangeTrackingState camera: ARCamera) {
         
         updateSessionInfoLabel(for: camera.trackingState)
+        
+        if cameraSettingsInit {
+            imgRes = camera.imageResolution
+            cameraSettingsInit = false
+            if let imgRes = imgRes {
+                debugPrint("Width: \(imgRes.width), Height: \(imgRes.height)")
+            }
+        }
         
         switch camera.trackingState {
         case .notAvailable:
@@ -453,6 +466,9 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate, UI
         guard let frame = sceneView.session.currentFrame else { return }
         scan?.updateOnEveryFrame(frame)
         testRun?.updateOnEveryFrame()
+        if ((videoRecorder?.isRecording) != nil) {
+            self.processFrame(frame)
+        }
     }
     
     func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
