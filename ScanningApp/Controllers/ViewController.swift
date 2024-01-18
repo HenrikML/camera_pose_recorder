@@ -50,6 +50,7 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate, UI
     
     internal var videoRecorder: VideoRecorder?
     @objc internal dynamic var backCameraDeviceInput: AVCaptureDeviceInput?
+    internal var frameCount: UInt = 0
     
     
     var modelURL: URL? {
@@ -77,6 +78,16 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate, UI
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        
+        let config = ARWorldTrackingConfiguration()
+        if #available(iOS 14.0, *) {
+            config.frameSemantics.insert(.sceneDepth)
+        } else {
+            // Fallback on earlier versions
+        }
+        sceneView.session.run(config)
+        
+        
         ViewController.instance = self
     }
     
@@ -87,6 +98,7 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate, UI
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
         
         sceneView.delegate = self
         sceneView.session.delegate = self
@@ -466,8 +478,10 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate, UI
         guard let frame = sceneView.session.currentFrame else { return }
         scan?.updateOnEveryFrame(frame)
         testRun?.updateOnEveryFrame()
-        if ((videoRecorder?.isRecording) != nil) {
-            self.processFrame(frame)
+        if let isRecording = videoRecorder?.isRecording {
+            if isRecording {
+                self.processFrame(frame)
+            }
         }
     }
     

@@ -20,6 +20,7 @@ extension ViewController
     }
     
     func startReferenceDataCapture() {
+        frameCount = 0
         if createRefDataDirectory() {
             let isRecording = self.videoRecorder?.isRecording ?? false
             if !isRecording {
@@ -74,6 +75,23 @@ extension ViewController
         {
             fatalError("Could not create directory: \(String(describing: folderURL!.absoluteString))")
         }
+        
+        // Initialize RGB intrinsics file
+        guard let rgbIntFilename = self.folderURL?.appendingPathComponent("rgb_intrinsics.txt") else { return false }
+        let rgbIntHeader = "frame,f_x,f_y,sigma_x,sigma_y\n"
+       
+        do {
+            try rgbIntHeader.write(to: rgbIntFilename, atomically: true, encoding: .utf8)
+        } catch {}
+        
+        // Initialize RGB extrinsics file
+        guard let rgbExtFilename = self.folderURL?.appendingPathComponent("rgb_extrinsics.txt") else { return false }
+        let rgbExtHeader = "frame,r_11,r_12,r_13,r_21,r_22,r_23,r_31,r_32,r_33,t_x,t_y,t_z\n"
+        
+        do {
+            try rgbExtHeader.write(to: rgbExtFilename, atomically: true, encoding: .utf8)
+        } catch {}
+         
         return true
     }
     
@@ -134,6 +152,10 @@ extension ViewController
     }
     
     func processFrame(_ frame: ARFrame) {
+        defer {
+            self.frameCount += 1
+        }
+        
         let scale = CMTimeScale(NSEC_PER_SEC)
         let pts = CMTime(value: CMTimeValue(frame.timestamp * Double(scale)),
                          timescale: scale)
@@ -143,6 +165,50 @@ extension ViewController
         }
         
         self.videoRecorder?.recordVideo(sampleBuffer)
+        
+        /*
+        if #available(iOS 14.0, *) {
+            if let depthData = frame.sceneDepth {
+                // TODO: Capture depth data to video
+            }
+        } else {
+            // Fallback on earlier versions
+        }
+         */
+        
+        // TODO: Capture bounding box data
+        
+        writeRGBCameraIntrinsics(intrinsics: frame.camera.intrinsics, frame: frameCount)
+        writeRGBCameraExtrinsics(extrinsics: frame.camera.transform, frame: frameCount)
+    }
+    
+    func writeRGBCameraIntrinsics(intrinsics: simd_float3x3, frame: UInt) {
+        guard let filename = self.folderURL?.appendingPathComponent("rgb_intrinsics.txt") else { return }
+        //frame,f_x,f_y,sigma_x,sigma_y
+        let data = "\(frame)," +
+            "\(intrinsics.columns.0.x)," +
+            "\(intrinsics.columns.1.y)," +
+            "\(intrinsics.columns.2.x)," +
+            "\(intrinsics.columns.2.y)\n"
+        
+        do {
+            try data.appendToURL(fileURL: filename)
+        } catch {}
+    }
+    
+    func writeRGBCameraExtrinsics(extrinsics: simd_float4x4, frame: UInt) {
+        guard let filename = self.folderURL?.appendingPathComponent("rgb_extrinsics.txt") else { return }
+        
+        //frame,r_11,r_12,r_13,r_21,r_22,r_23,r_31,r_32,r_33,t_x,t_y,t_z
+        let data = "\(frame)," +
+            "\(extrinsics.columns.0.x),\(extrinsics.columns.1.x),\(extrinsics.columns.2.x)," +
+            "\(extrinsics.columns.0.y),\(extrinsics.columns.1.y),\(extrinsics.columns.2.y)," +
+            "\(extrinsics.columns.0.z),\(extrinsics.columns.1.z),\(extrinsics.columns.2.z)," +
+            "\(extrinsics.columns.3.x),\(extrinsics.columns.3.y),\(extrinsics.columns.3.z)\n"
+        
+        do {
+            try data.appendToURL(fileURL: filename)
+        } catch {}
     }
 }
 
