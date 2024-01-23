@@ -32,6 +32,7 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate, UI
     @IBOutlet weak var toggleInstructionsButton: RoundedButton!
     
     internal var internalState: State = .startARSession
+    internal var captureStateValue: CaptureState = .ready
     
     internal var scan: Scan?
     
@@ -48,7 +49,7 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate, UI
     
     internal var screenCenter = CGPoint()
     
-    internal var videoRecorder: VideoRecorder?
+    //internal var videoRecorder: VideoRecorder?
     @objc internal dynamic var backCameraDeviceInput: AVCaptureDeviceInput?
     internal var frameCount: UInt = 0
     
@@ -78,16 +79,12 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate, UI
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        
-        let config = ARWorldTrackingConfiguration()
-        if #available(iOS 14.0, *) {
-            config.frameSemantics.insert(.sceneDepth)
-        } else {
-            // Fallback on earlier versions
+        if let test = sceneView?.session {
+            print(test.description)
         }
-        sceneView.session.run(config)
-        
-        
+        else {
+            print("NOOOOOO")
+        }
         ViewController.instance = self
     }
     
@@ -421,6 +418,19 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate, UI
         if cameraSettingsInit {
             imgRes = camera.imageResolution
             cameraSettingsInit = false
+            
+            if let config = sceneView.session.configuration {
+                if #available(iOS 14.0, *) {
+                    
+                    print(config.description)
+                    //config.frameSemantics.insert(.sceneDepth)
+                } else {
+                    // Fallback on earlier versions
+                }
+            } else {
+                print("NO CONFIGURATION")
+            }
+            
             if let imgRes = imgRes {
                 debugPrint("Width: \(imgRes.width), Height: \(imgRes.height)")
             }
@@ -478,11 +488,7 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate, UI
         guard let frame = sceneView.session.currentFrame else { return }
         scan?.updateOnEveryFrame(frame)
         testRun?.updateOnEveryFrame()
-        if let isRecording = videoRecorder?.isRecording {
-            if isRecording {
-                self.processFrame(frame)
-            }
-        }
+        self.processFrame(frame)
     }
     
     func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {

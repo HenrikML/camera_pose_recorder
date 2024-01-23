@@ -81,8 +81,13 @@ extension ViewController {
                 // Make sure the SCNScene is cleared of any SCNNodes from previous scans.
                 sceneView.scene = SCNScene()
                 
-                let configuration = ARObjectScanningConfiguration()
+                let configuration = ARWorldTrackingConfiguration()
                 configuration.planeDetection = .horizontal
+                if #available(iOS 14.0, *) {
+                    configuration.frameSemantics.insert(.sceneDepth)
+                } else {
+                    // Fallback on earlier versions
+                }
                 sceneView.session.run(configuration, options: .resetTracking)
                 cancelMaxScanTimeTimer()
                 cancelMessageExpirationTimer()
@@ -133,11 +138,9 @@ extension ViewController {
         guard let scanState = notification.userInfo?[Scan.stateUserInfoKey] as? Scan.State else { return }
         
         DispatchQueue.main.async {
-            if (self.videoRecorder?.isRecording) != nil {
-                self.stopReferenceDataCapture()
-            }
             switch scanState {
             case .ready:
+                self.stopReferenceDataCapture()
                 print("State: Ready to scan")
                 self.setNavigationBarTitle("Ready to scan")
                 self.showBackButton(false)
@@ -152,6 +155,7 @@ extension ViewController {
                     self.nextButton.isEnabled = false
                 }
             case .defineBoundingBox:
+                self.stopReferenceDataCapture()
                 print("State: Define bounding box")
                 self.displayInstruction(Message("Position and resize bounding box using gestures.\n" +
                     "Long press sides to push/pull them in or out. "))
@@ -178,6 +182,7 @@ extension ViewController {
                 // Disable plane detection (even if no plane has been found yet at this time) for performance reasons.
                 self.sceneView.stopPlaneDetection()
             case .adjustingOrigin:
+                self.stopReferenceDataCapture()
                 print("State: Adjusting Origin")
                 self.displayInstruction(Message("Adjust origin using gestures.\n" +
                     "You can load a *.usdz 3D model overlay."))

@@ -19,17 +19,16 @@ extension ViewController
         var cameraResolutionH:Int32 = 0
     }
     
+    enum CaptureState {
+        case ready
+        case capturing
+    }
+    
+    
     func startReferenceDataCapture() {
         frameCount = 0
         if createRefDataDirectory() {
-            let isRecording = self.videoRecorder?.isRecording ?? false
-            if !isRecording {
-                let settings = createSettings()
-                let transform = CGAffineTransformMakeRotation(CGFloat(Double.pi / 2))
-                self.videoRecorder = VideoRecorder(settings: settings, transform: transform)
-                
-                self.videoRecorder?.startRecording()
-            }
+            captureStateValue = .capturing
         }
     }
     
@@ -52,17 +51,11 @@ extension ViewController
     }
     
     func stopReferenceDataCapture() {
-        guard let videoRecorder = videoRecorder else {
-            return
-        }
-        
-        if videoRecorder.isRecording {
-            videoRecorder.stopRecording { videoURL in self.saveReferenceVideo(tempURL: videoURL) }
-        }
+        captureStateValue = .ready
     }
     
     func createRefDataDirectory() -> Bool {
-        let folderStr = "ref_" + getCurrentDateAsString()
+        let folderStr = "scan_" + getCurrentDateAsString()
         guard let rootURL: URL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {return false}
         
         self.folderURL = rootURL.appendingPathComponent(folderStr)
@@ -71,6 +64,10 @@ extension ViewController
     
         do {
             try FileManager.default.createDirectory(atPath: folderURL!.path, withIntermediateDirectories: true)
+            
+            try FileManager.default.createDirectory(atPath: folderURL!.appendingPathComponent("video").path, withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(atPath: folderURL!.appendingPathComponent("depth").path, withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(atPath: folderURL!.appendingPathComponent("confidence").path, withIntermediateDirectories: true)
         } catch
         {
             fatalError("Could not create directory: \(String(describing: folderURL!.absoluteString))")
@@ -101,7 +98,7 @@ extension ViewController
         
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd_HH-mm-ss"
-        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+        dateFormatter.timeZone = TimeZone.current
         
         return dateFormatter.string(from: date)
     }
@@ -152,34 +149,59 @@ extension ViewController
     }
     
     func processFrame(_ frame: ARFrame) {
-        defer {
-            self.frameCount += 1
-        }
-        
-        let scale = CMTimeScale(NSEC_PER_SEC)
-        let pts = CMTime(value: CMTimeValue(frame.timestamp * Double(scale)),
-                         timescale: scale)
-        let sampleBuffer: CMSampleBuffer? = getCMSampleBuffer(pixelBuffer: frame.capturedImage, scale: scale, pts: pts)
-        guard let sampleBuffer = sampleBuffer else {
+        if captureStateValue == .ready {
             return
         }
         
-        self.videoRecorder?.recordVideo(sampleBuffer)
+        defer {
+            self.frameCount += 1
+        }
+        let sampleRate: UInt = 4
         
-        /*
-        if #available(iOS 14.0, *) {
-            if let depthData = frame.sceneDepth {
-                // TODO: Capture depth data to video
+        if #available(iOS 14.0, *), self.frameCount.isMultiple(of: sampleRate) {
+            let transform = CGAffineTransformMakeRotation(CGFloat(3 * Double.pi / 2))
+            
+            let rgbImage = CIImage(cvPixelBuffer: frame.capturedImage)
+            let depthImage = CIImage(cvPixelBuffer: frame.sceneDepth!.depthMap)
+            let confidenceImage = CIImage(cvPixelBuffer: frame.sceneDepth!.confidenceMap!)
+            
+            let context = CIContext()
+            let index = self.frameCount/sampleRate
+            
+            let videoURL  = self.folderURL?.appendingPathComponent("video").appendingPathComponent("rgb_\(index).png")
+            
+            let depthURL  = self.folderURL?.appendingPathComponent("depth").appendingPathComponent("depth_\(index).png")
+            
+            let confidenceURL  = self.folderURL?.appendingPathComponent("confidence").appendingPathComponent("confidence_\(index).png")
+            let intrinsics = frame.camera.intrinsics
+            let extrinsics = frame.camera.transform
+            DispatchQueue.global().async {
+                do {
+                    
+                    try  context.writePNGRepresentation(of: rgbImage.transformed(by: transform),
+                                                        to: videoURL!,
+                                                        format: .RGBA8,
+                                                        colorSpace: rgbImage.colorSpace!)
+                    try  context.writePNGRepresentation(of: depthImage.transformed(by: transform),
+                                                        to: depthURL!,
+                                                        format: .Lf,
+                                                        colorSpace: depthImage.colorSpace!)
+                    try  context.writePNGRepresentation(of: confidenceImage.transformed(by: transform),
+                                                        to: confidenceURL!,
+                                                        format: .Lf,
+                                                        colorSpace: confidenceImage.colorSpace!)
+                  
+                } catch {}
+                // TODO: Capture bounding box data
+                
             }
+            
+            self.writeRGBCameraIntrinsics(intrinsics: intrinsics, frame: index)
+            self.writeRGBCameraExtrinsics(extrinsics: extrinsics, frame: index)
         } else {
             // Fallback on earlier versions
         }
-         */
         
-        // TODO: Capture bounding box data
-        
-        writeRGBCameraIntrinsics(intrinsics: frame.camera.intrinsics, frame: frameCount)
-        writeRGBCameraExtrinsics(extrinsics: frame.camera.transform, frame: frameCount)
     }
     
     func writeRGBCameraIntrinsics(intrinsics: simd_float3x3, frame: UInt) {

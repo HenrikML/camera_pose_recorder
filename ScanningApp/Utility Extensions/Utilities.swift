@@ -122,7 +122,7 @@ extension ARSCNView {
     }
     
     func stopPlaneDetection() {
-        if let configuration = session.configuration as? ARObjectScanningConfiguration {
+        if let configuration = session.configuration as? ARWorldTrackingConfiguration {
             configuration.planeDetection = []
             session.run(configuration)
         }
