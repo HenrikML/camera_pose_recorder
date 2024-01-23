@@ -37,6 +37,8 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate, UI
     internal var scan: Scan?
     
     internal var folderURL: URL?
+    internal var boundingBoxTransform: SCNMatrix4 = SCNMatrix4()
+    internal var boundingBoxExtent = SIMD3<Float>(0.1, 0.1, 0.1)
     
     var referenceObjectToMerge: ARReferenceObject?
     var referenceObjectToTest: ARReferenceObject?
@@ -113,10 +115,15 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate, UI
                                        name: ScannedObject.boundingBoxCreatedNotification, object: nil)
         notificationCenter.addObserver(self, selector: #selector(scanPercentageChanged),
                                        name: BoundingBox.scanPercentageChangedNotification, object: nil)
+        
         notificationCenter.addObserver(self, selector: #selector(boundingBoxPositionOrExtentChanged(_:)),
                                        name: BoundingBox.extentChangedNotification, object: nil)
         notificationCenter.addObserver(self, selector: #selector(boundingBoxPositionOrExtentChanged(_:)),
                                        name: BoundingBox.positionChangedNotification, object: nil)
+        
+        notificationCenter.addObserver(self, selector: #selector(boundingBoxPositionOrExtentChanged(_:)),
+                                       name: BoundingBox.rotationChangedNotification, object: nil)
+        
         notificationCenter.addObserver(self, selector: #selector(objectOriginPositionChanged(_:)),
                                        name: ObjectOrigin.positionChangedNotification, object: nil)
         notificationCenter.addObserver(self, selector: #selector(displayWarningIfInLowPowerMode),
@@ -608,6 +615,16 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate, UI
         let zString = String(format: "length: %.2f", box.extent.z)
         let distanceFromCamera = String(format: "%.2f m", distance(box.simdWorldPosition, cameraPos))
         displayMessage("Current bounding box: \(distanceFromCamera) away\n\(xString) \(yString) \(zString)", expirationTime: 1.5)
+        
+        boundingBoxTransform = box.worldTransform
+        boundingBoxExtent = box.extent
+    }
+    
+    @objc
+    func objectRotationChanged(_ notification: Notification) {
+        guard let box = notification.object as? BoundingBox else { return }
+        boundingBoxExtent = box.extent
+        boundingBoxTransform = box.worldTransform
     }
     
     @objc
@@ -619,7 +636,9 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate, UI
         let yString = String(format: "y: %.2f", node.position.y)
         let zString = String(format: "z: %.2f", node.position.z)
         displayMessage("Current local origin position in meters:\n\(xString) \(yString) \(zString)", expirationTime: 1.5)
+        
     }
+    
     
     @objc
     func displayWarningIfInLowPowerMode() {

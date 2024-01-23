@@ -29,6 +29,13 @@ class ScannedObject: SCNNode {
         }
     }
     
+    override var simdOrientation: simd_quatf {
+        didSet {
+            
+            boundingBox?.notifyRotation()
+        }
+    }
+    
     var eitherBoundingBox: BoundingBox? {
         return boundingBox != nil ? boundingBox : ghostBoundingBox
     }

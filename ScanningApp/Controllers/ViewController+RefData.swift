@@ -28,6 +28,7 @@ extension ViewController
     func startReferenceDataCapture() {
         frameCount = 0
         if createRefDataDirectory() {
+            writeBoundingBoxData()
             captureStateValue = .capturing
         }
     }
@@ -88,7 +89,20 @@ extension ViewController
         do {
             try rgbExtHeader.write(to: rgbExtFilename, atomically: true, encoding: .utf8)
         } catch {}
-         
+        
+        // Initialize bounding box file
+        guard let bbFilename = self.folderURL?.appendingPathComponent("bounding_box.txt") else { return false }
+        let bbHeader = "extent_x,extent_y,extent_z," +
+        "m_11,m_21,m_31,m_41," +
+        "m_12,m_22,m_32,m_42," +
+        "m_13,m_23,m_33,m_43," +
+        "m_14,m_23,m_34,m_44,\n"
+        
+        do {
+            try bbHeader.write(to: bbFilename, atomically: true, encoding: .utf8)
+        } catch {}
+        
+        
         return true
     }
     
@@ -159,29 +173,34 @@ extension ViewController
         let sampleRate: UInt = 4
         
         if #available(iOS 14.0, *), self.frameCount.isMultiple(of: sampleRate) {
-            let transform = CGAffineTransformMakeRotation(CGFloat(3 * Double.pi / 2))
+            //let transform = CGAffineTransformMakeRotation(CGFloat(3 * Double.pi / 2))
             
             let rgbImage = CIImage(cvPixelBuffer: frame.capturedImage)
-            let depthImage = CIImage(cvPixelBuffer: frame.sceneDepth!.depthMap)
-            let confidenceImage = CIImage(cvPixelBuffer: frame.sceneDepth!.confidenceMap!)
+            let depthImage = frame.sceneDepth!.depthMap
+            let confidenceImage = frame.sceneDepth!.confidenceMap!
             
             let context = CIContext()
             let index = self.frameCount/sampleRate
             
-            let videoURL  = self.folderURL?.appendingPathComponent("video").appendingPathComponent("rgb_\(index).png")
+            let videoURL  = self.folderURL?.appendingPathComponent("video").appendingPathComponent("video_\(index).png")
             
-            let depthURL  = self.folderURL?.appendingPathComponent("depth").appendingPathComponent("depth_\(index).png")
+            let depthURL  = self.folderURL?.appendingPathComponent("depth").appendingPathComponent("depth_\(index).bin")
             
-            let confidenceURL  = self.folderURL?.appendingPathComponent("confidence").appendingPathComponent("confidence_\(index).png")
+            let confidenceURL  = self.folderURL?.appendingPathComponent("confidence").appendingPathComponent("confidence_\(index).bin")
             let intrinsics = frame.camera.intrinsics
             let extrinsics = frame.camera.transform
+            
+            let depthArray = depthMapToArray(pixelBuffer: depthImage)
+            let confidenceArray = confidenceMapToArray(pixelBuffer: confidenceImage)
+            
             DispatchQueue.global().async {
                 do {
                     
-                    try  context.writePNGRepresentation(of: rgbImage.transformed(by: transform),
+                    try  context.writePNGRepresentation(of: rgbImage,
                                                         to: videoURL!,
                                                         format: .RGBA8,
                                                         colorSpace: rgbImage.colorSpace!)
+                    /*
                     try  context.writePNGRepresentation(of: depthImage.transformed(by: transform),
                                                         to: depthURL!,
                                                         format: .Lf,
@@ -190,7 +209,12 @@ extension ViewController
                                                         to: confidenceURL!,
                                                         format: .Lf,
                                                         colorSpace: confidenceImage.colorSpace!)
-                  
+                    */
+                    self.writeFloat32ArrayToFolder(array: depthArray,
+                                                   url: depthURL!)
+                    
+                    self.writeUInt8ArrayToFolder(array: confidenceArray,
+                                                   url: confidenceURL!)
                 } catch {}
                 // TODO: Capture bounding box data
                 
@@ -231,6 +255,102 @@ extension ViewController
         do {
             try data.appendToURL(fileURL: filename)
         } catch {}
+    }
+    
+    func writeBoundingBoxData() {
+        guard let filename = self.folderURL?.appendingPathComponent("bounding_box.txt") else { return }
+        
+        //extent_x,extent_y,extent_z,m_11,m_21,m_31,m_41,m_12,m_22,m_32,m_42,m_13,m_23,m_33,m_43,m_14,m_23,m_34,m_44
+        let data = "\(boundingBoxExtent.x),\(boundingBoxExtent.y),\(boundingBoxExtent.z)," +
+        "\(boundingBoxTransform.m11),\(boundingBoxTransform.m21),\(boundingBoxTransform.m31),\(boundingBoxTransform.m41)," +
+        "\(boundingBoxTransform.m12),\(boundingBoxTransform.m22),\(boundingBoxTransform.m32),\(boundingBoxTransform.m42)," +
+        "\(boundingBoxTransform.m13),\(boundingBoxTransform.m23),\(boundingBoxTransform.m33),\(boundingBoxTransform.m43)," +
+        "\(boundingBoxTransform.m14),\(boundingBoxTransform.m24),\(boundingBoxTransform.m34),\(boundingBoxTransform.m44)\n"
+        
+        do {
+            try data.appendToURL(fileURL: filename)
+        } catch {}
+    }
+    
+    func writeFloat32ArrayToFolder(array: [[Float32]], url: URL) {
+        
+        let rows = array.count
+        let cols = array[0].count
+        var flattened = array.flatMap{$0}
+        
+        let data = Data(bytes: &flattened, count: MemoryLayout<Float32>.size * rows * cols)
+        do {
+            try data.write(to: url)
+        } catch {}
+    }
+    
+    
+    func writeUInt8ArrayToFolder(array: [[UInt8]], url: URL) {
+        
+        let rows = array.count
+        let cols = array[0].count
+        var flattened = array.flatMap{$0}
+        
+        let data = Data(bytes: &flattened, count: MemoryLayout<UInt8>.size * rows * cols)
+        do {
+            try data.write(to: url)
+        } catch {}
+    }
+    
+    func depthMapToArray(pixelBuffer: CVPixelBuffer) -> [[Float32]] {
+        CVPixelBufferLockBaseAddress(pixelBuffer, CVPixelBufferLockFlags(rawValue: 0))
+        defer {
+            CVPixelBufferUnlockBaseAddress(pixelBuffer, CVPixelBufferLockFlags(rawValue: 0))
+        }
+        
+        //let format = CVPixelBufferGetPixelFormatType(pixelBuffer)
+        
+        let width = CVPixelBufferGetWidth(pixelBuffer)
+        let height = CVPixelBufferGetHeight(pixelBuffer)
+        
+        var array: [[Float32]] = Array(repeating: Array(repeating: 0, count: width), count: height)
+        
+        let baseAddress = CVPixelBufferGetBaseAddress(pixelBuffer)
+        //let bytesPerRow = CVPixelBufferGetBytesPerRow(pixelBuffer)
+        
+        let floatBuffer = unsafeBitCast(baseAddress, to: UnsafeMutablePointer<Float32>.self)
+        
+        for row in 0 ..< height {
+            for col in 0 ..< width {
+                let index = row * width + col
+                array[row][col] = floatBuffer[index]
+            }
+        }
+        
+        return array
+    }
+    
+    func confidenceMapToArray(pixelBuffer: CVPixelBuffer) -> [[UInt8]] {
+        CVPixelBufferLockBaseAddress(pixelBuffer, CVPixelBufferLockFlags(rawValue: 0))
+        defer {
+            CVPixelBufferUnlockBaseAddress(pixelBuffer, CVPixelBufferLockFlags(rawValue: 0))
+        }
+        
+        //let format = CVPixelBufferGetPixelFormatType(pixelBuffer)
+        
+        let width = CVPixelBufferGetWidth(pixelBuffer)
+        let height = CVPixelBufferGetHeight(pixelBuffer)
+        
+        var array: [[UInt8]] = Array(repeating: Array(repeating: 0, count: width), count: height)
+        
+        let baseAddress = CVPixelBufferGetBaseAddress(pixelBuffer)
+        let bytesPerRow = CVPixelBufferGetBytesPerRow(pixelBuffer)
+        
+        let floatBuffer = unsafeBitCast(baseAddress, to: UnsafeMutablePointer<UInt8>.self)
+        
+        for row in 0 ..< height-1 {
+            for col in 0 ..< width-1 {
+                let index = row * bytesPerRow + col
+                array[row][col] = floatBuffer[index]
+            }
+        }
+        
+        return array
     }
 }
 

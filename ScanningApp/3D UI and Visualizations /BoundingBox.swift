@@ -13,6 +13,7 @@ class BoundingBox: SCNNode {
     static let extentChangedNotification = Notification.Name("BoundingBoxExtentChanged")
     static let positionChangedNotification = Notification.Name("BoundingBoxPositionChanged")
     static let scanPercentageChangedNotification = Notification.Name("ScanPercentageChanged")
+    static let rotationChangedNotification = Notification.Name("BoundingBoxRotationChanged")
     static let scanPercentageUserInfoKey = "ScanPercentage"
     static let boxExtentUserInfoKey = "BoxExtent"
     
@@ -22,16 +23,23 @@ class BoundingBox: SCNNode {
             updateVisualization()
             NotificationCenter.default.post(name: BoundingBox.extentChangedNotification,
                                             object: self)
+            
+            print("Extent changed")
         }
     }
     
     override var simdPosition: SIMD3<Float> {
         willSet(newValue) {
+            
             if distance(newValue, simdPosition) > 0.001 {
                 NotificationCenter.default.post(name: BoundingBox.positionChangedNotification,
                                                 object: self)
             }
         }
+    }
+    
+    func notifyRotation() {
+        NotificationCenter.default.post(name: BoundingBox.rotationChangedNotification, object: self)
     }
     
     var hasBeenAdjustedByUser = false
