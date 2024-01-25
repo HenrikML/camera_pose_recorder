@@ -81,12 +81,7 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate, UI
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        if let test = sceneView?.session {
-            print(test.description)
-        }
-        else {
-            print("NOOOOOO")
-        }
+        
         ViewController.instance = self
     }
     

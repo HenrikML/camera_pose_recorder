@@ -175,7 +175,7 @@ extension ViewController
                 do {
                     try  context.writePNGRepresentation(of: rgbImage,
                                                         to: videoURL!,
-                                                        format: .RGBA8,
+                                                        format: .RGBA16,
                                                         colorSpace: rgbImage.colorSpace!)
                     
                     self.writeFloat32ArrayToFolder(array: depthArray,
@@ -304,13 +304,13 @@ extension ViewController
         var array: [[UInt8]] = Array(repeating: Array(repeating: 0, count: width), count: height)
         
         let baseAddress = CVPixelBufferGetBaseAddress(pixelBuffer)
-        let bytesPerRow = CVPixelBufferGetBytesPerRow(pixelBuffer)
+        //let bytesPerRow = CVPixelBufferGetBytesPerRow(pixelBuffer)
         
         let floatBuffer = unsafeBitCast(baseAddress, to: UnsafeMutablePointer<UInt8>.self)
         
         for row in 0 ..< height-1 {
             for col in 0 ..< width-1 {
-                let index = row * bytesPerRow + col
+                let index = row * width + col
                 array[row][col] = floatBuffer[index]
             }
         }
