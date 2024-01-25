@@ -12,18 +12,10 @@ import ARKit
 
 extension ViewController
 {
-    struct CameraMetadata {
-        var url:URL?
-        var cameraFPS:Double = 0
-        var cameraResolutionW:Int32 = 0
-        var cameraResolutionH:Int32 = 0
-    }
-    
     enum CaptureState {
         case ready
         case capturing
     }
-    
     
     func startReferenceDataCapture() {
         frameCount = 0
@@ -31,24 +23,6 @@ extension ViewController
             writeBoundingBoxData()
             captureStateValue = .capturing
         }
-    }
-    
-    func createSettings() -> [String: Any] {
-        let settings: [String: Any] = [
-            AVVideoCodecKey: AVVideoCodecType.h264,
-            AVVideoWidthKey: self.imgRes?.width ?? 1920,
-            AVVideoHeightKey: self.imgRes?.height ?? 1440,
-            AVVideoCompressionPropertiesKey: [
-                AVVideoPixelAspectRatioKey: [
-                    AVVideoPixelAspectRatioHorizontalSpacingKey: 1,
-                    AVVideoPixelAspectRatioVerticalSpacingKey: 1
-                ],
-                AVVideoMaxKeyFrameIntervalKey: 1,
-                AVVideoAverageBitRateKey: 16000000
-            ]
-        ]
-        
-        return settings
     }
     
     func stopReferenceDataCapture() {
@@ -84,7 +58,11 @@ extension ViewController
         
         // Initialize RGB extrinsics file
         guard let rgbExtFilename = self.folderURL?.appendingPathComponent("rgb_extrinsics.txt") else { return false }
-        let rgbExtHeader = "frame,r_11,r_12,r_13,r_21,r_22,r_23,r_31,r_32,r_33,t_x,t_y,t_z\n"
+        let rgbExtHeader = "frame," +
+        "m_11,m_21,m_31,m_41," +
+        "m_12,m_22,m_32,m_42," +
+        "m_13,m_23,m_33,m_43," +
+        "m_14,m_24,m_34,m_44,\n"
         
         do {
             try rgbExtHeader.write(to: rgbExtFilename, atomically: true, encoding: .utf8)
@@ -96,7 +74,7 @@ extension ViewController
         "m_11,m_21,m_31,m_41," +
         "m_12,m_22,m_32,m_42," +
         "m_13,m_23,m_33,m_43," +
-        "m_14,m_23,m_34,m_44,\n"
+        "m_14,m_24,m_34,m_44,\n"
         
         do {
             try bbHeader.write(to: bbFilename, atomically: true, encoding: .utf8)
@@ -195,35 +173,22 @@ extension ViewController
             
             DispatchQueue.global().async {
                 do {
-                    
                     try  context.writePNGRepresentation(of: rgbImage,
                                                         to: videoURL!,
                                                         format: .RGBA8,
                                                         colorSpace: rgbImage.colorSpace!)
-                    /*
-                    try  context.writePNGRepresentation(of: depthImage.transformed(by: transform),
-                                                        to: depthURL!,
-                                                        format: .Lf,
-                                                        colorSpace: depthImage.colorSpace!)
-                    try  context.writePNGRepresentation(of: confidenceImage.transformed(by: transform),
-                                                        to: confidenceURL!,
-                                                        format: .Lf,
-                                                        colorSpace: confidenceImage.colorSpace!)
-                    */
+                    
                     self.writeFloat32ArrayToFolder(array: depthArray,
                                                    url: depthURL!)
                     
                     self.writeUInt8ArrayToFolder(array: confidenceArray,
                                                    url: confidenceURL!)
                 } catch {}
-                // TODO: Capture bounding box data
                 
             }
             
             self.writeRGBCameraIntrinsics(intrinsics: intrinsics, frame: index)
             self.writeRGBCameraExtrinsics(extrinsics: extrinsics, frame: index)
-        } else {
-            // Fallback on earlier versions
         }
         
     }
@@ -245,12 +210,12 @@ extension ViewController
     func writeRGBCameraExtrinsics(extrinsics: simd_float4x4, frame: UInt) {
         guard let filename = self.folderURL?.appendingPathComponent("rgb_extrinsics.txt") else { return }
         
-        //frame,r_11,r_12,r_13,r_21,r_22,r_23,r_31,r_32,r_33,t_x,t_y,t_z
+        //frame,m_11,m_12,m_13,m_14,m_21,m_22,m_23,m_24,m_31,m_32,m_33,m_34,m_41,m_42,m_43,m_44
         let data = "\(frame)," +
-            "\(extrinsics.columns.0.x),\(extrinsics.columns.1.x),\(extrinsics.columns.2.x)," +
-            "\(extrinsics.columns.0.y),\(extrinsics.columns.1.y),\(extrinsics.columns.2.y)," +
-            "\(extrinsics.columns.0.z),\(extrinsics.columns.1.z),\(extrinsics.columns.2.z)," +
-            "\(extrinsics.columns.3.x),\(extrinsics.columns.3.y),\(extrinsics.columns.3.z)\n"
+            "\(extrinsics.columns.0.x),\(extrinsics.columns.1.x),\(extrinsics.columns.2.x),\(extrinsics.columns.3.x)," +
+            "\(extrinsics.columns.0.y),\(extrinsics.columns.1.y),\(extrinsics.columns.2.y),\(extrinsics.columns.3.y)," +
+            "\(extrinsics.columns.0.z),\(extrinsics.columns.1.z),\(extrinsics.columns.2.z),\(extrinsics.columns.3.z)," +
+        "\(extrinsics.columns.0.x),\(extrinsics.columns.1.y),\(extrinsics.columns.2.w),\(extrinsics.columns.3.w)\n"
         
         do {
             try data.appendToURL(fileURL: filename)
@@ -260,7 +225,7 @@ extension ViewController
     func writeBoundingBoxData() {
         guard let filename = self.folderURL?.appendingPathComponent("bounding_box.txt") else { return }
         
-        //extent_x,extent_y,extent_z,m_11,m_21,m_31,m_41,m_12,m_22,m_32,m_42,m_13,m_23,m_33,m_43,m_14,m_23,m_34,m_44
+        //extent_x,extent_y,extent_z,m_11,m_21,m_31,m_41,m_12,m_22,m_32,m_42,m_13,m_23,m_33,m_43,m_14,m_24,m_34,m_44
         let data = "\(boundingBoxExtent.x),\(boundingBoxExtent.y),\(boundingBoxExtent.z)," +
         "\(boundingBoxTransform.m11),\(boundingBoxTransform.m21),\(boundingBoxTransform.m31),\(boundingBoxTransform.m41)," +
         "\(boundingBoxTransform.m12),\(boundingBoxTransform.m22),\(boundingBoxTransform.m32),\(boundingBoxTransform.m42)," +

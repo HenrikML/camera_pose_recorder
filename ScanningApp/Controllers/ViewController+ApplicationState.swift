@@ -241,8 +241,9 @@ extension ViewController {
                 }
             }
         case .testing:
+            print("Current state: Testing")
             // Testing is the last state, show the share sheet at the end.
-            createAndShareReferenceObject()
+            //createAndShareReferenceObject()
         }
     }
     

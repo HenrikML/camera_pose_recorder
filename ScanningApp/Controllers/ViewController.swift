@@ -426,18 +426,6 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate, UI
             imgRes = camera.imageResolution
             cameraSettingsInit = false
             
-            if let config = sceneView.session.configuration {
-                if #available(iOS 14.0, *) {
-                    
-                    print(config.description)
-                    //config.frameSemantics.insert(.sceneDepth)
-                } else {
-                    // Fallback on earlier versions
-                }
-            } else {
-                print("NO CONFIGURATION")
-            }
-            
             if let imgRes = imgRes {
                 debugPrint("Width: \(imgRes.width), Height: \(imgRes.height)")
             }

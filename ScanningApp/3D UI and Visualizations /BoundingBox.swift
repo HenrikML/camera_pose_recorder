@@ -24,7 +24,7 @@ class BoundingBox: SCNNode {
             NotificationCenter.default.post(name: BoundingBox.extentChangedNotification,
                                             object: self)
             
-            print("Extent changed")
+            //print("Extent changed")
         }
     }
     
