@@ -94,7 +94,7 @@ class ScannedObject: SCNNode {
             NotificationCenter.default.post(name: ScannedObject.boundingBoxCreatedNotification, object: nil)
         }
     }
-    
+    /*
     func fitOverPointCloud(_ pointCloud: ARPointCloud) {
         // Do the automatic adjustment of the bounding box only if the user
         // hasn't adjusted it yet.
@@ -105,7 +105,7 @@ class ScannedObject: SCNNode {
         
         let userFocusPoint = hitTestResults[0].worldTransform.position
         boundingBox.fitOverPointCloud(pointCloud, focusPoint: userFocusPoint)
-    }
+    }*/
     
     func tryToAlignWithPlanes(_ anchors: [ARAnchor]) {
         if let boundingBox = self.boundingBox {

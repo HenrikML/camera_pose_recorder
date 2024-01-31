@@ -101,7 +101,7 @@ class BoundingBox: SCNNode {
             sides.forEach { $0.value.isHidden = true }
         }
     }
-    
+    /*
     func fitOverPointCloud(_ pointCloud: ARPointCloud, focusPoint: SIMD3<Float>?) {
         var filteredPoints: [SIMD3<Float>] = []
         
@@ -143,7 +143,7 @@ class BoundingBox: SCNNode {
         // Update the position & extent of the bounding box based on the new min & max values.
         self.simdPosition += (localMax + localMin) / 2
         self.extent = localMax - localMin
-    }
+    }*/
     
     private func updateVisualization() {
         self.updateSides()

@@ -56,7 +56,7 @@ class Scan {
                 // When entering the scanning state, take a screenshot of the object to be scanned.
                 // This screenshot will later be saved in the *.arobject file
                 createScreenshot()
-            case .adjustingOrigin where stateValue == .scanning && qualityIsLow:
+            /*case .adjustingOrigin where stateValue == .scanning && qualityIsLow:
                 let title = "Not enough detail"
                 let message = """
                 This scan has not enough detail (it contains \(pointCloud.count) features - aim for at least \(Scan.minFeatureCount)).
@@ -65,7 +65,7 @@ class Scan {
                 """
                 ViewController.instance?.showAlert(title: title, message: message, buttonTitle: "Yes", showCancel: true) { _ in
                     self.state = .scanning
-                }
+                }*/
             case .adjustingOrigin where stateValue == .scanning:
                 if let boundingBox = scannedObject.boundingBox, boundingBox.progressPercentage < 100 {
                     let title = "Scan not complete"
@@ -105,7 +105,7 @@ class Scan {
     private(set) var scannedReferenceObject: ARReferenceObject?
     
     // The node for visualizing the point cloud.
-    private(set) var pointCloud: ScannedPointCloud
+    //private(set) var pointCloud: ScannedPointCloud
     
     private var sceneView: ARSCNView
     
@@ -125,7 +125,7 @@ class Scan {
         self.sceneView = sceneView
         
         scannedObject = ScannedObject(sceneView)
-        pointCloud = ScannedPointCloud()
+        //pointCloud = ScannedPointCloud()
         
         NotificationCenter.default.addObserver(self,
                                                selector: #selector(self.applicationStateChanged(_:)),
@@ -133,12 +133,12 @@ class Scan {
                                                object: nil)
         
         self.sceneView.scene.rootNode.addChildNode(self.scannedObject)
-        self.sceneView.scene.rootNode.addChildNode(self.pointCloud)
+        //self.sceneView.scene.rootNode.addChildNode(self.pointCloud)
     }
     
     deinit {
         self.scannedObject.removeFromParentNode()
-        self.pointCloud.removeFromParentNode()
+        //self.pointCloud.removeFromParentNode()
     }
     
     @objc
@@ -147,10 +147,10 @@ class Scan {
         switch appState {
         case .scanning:
             scannedObject.isHidden = false
-            pointCloud.isHidden = false
+            //pointCloud.isHidden = false
         default:
             scannedObject.isHidden = true
-            pointCloud.isHidden = true
+            //pointCloud.isHidden = true
         }
     }
     
@@ -335,13 +335,14 @@ class Scan {
     }
     
     func updateOnEveryFrame(_ frame: ARFrame) {
+        /*
         if state == .ready || state == .defineBoundingBox {
             if let points = frame.rawFeaturePoints {
                 // Automatically adjust the size of the bounding box.
                 self.scannedObject.fitOverPointCloud(points)
             }
         }
-        
+        */
         if state == .ready || state == .defineBoundingBox || state == .scanning {
             
             if let lightEstimate = frame.lightEstimate, lightEstimate.ambientIntensity < 500, !hasWarnedAboutLowLight, isFirstScan {
@@ -350,7 +351,7 @@ class Scan {
                 let message = "Consider moving to an environment with more light."
                 ViewController.instance?.showAlert(title: title, message: message)
             }
-            
+            /*
             // Try a preliminary creation of the reference object based off the current
             // bounding box & update the point cloud visualization based on that.
             if let boundingBox = scannedObject.eitherBoundingBox {
@@ -378,7 +379,7 @@ class Scan {
                 if let currentPoints = frame.rawFeaturePoints {
                     pointCloud.update(with: currentPoints)
                 }
-            }
+            }*/
         }
         
         // Update bounding box side coloring to visualize scanning coverage
@@ -388,14 +389,15 @@ class Scan {
         }
         
         scannedObject.updateOnEveryFrame()
-        pointCloud.updateOnEveryFrame()
+        //pointCloud.updateOnEveryFrame()
     }
     
     var timeOfLastReferenceObjectCreation = CACurrentMediaTime()
     
+    /*
     var qualityIsLow: Bool {
         return pointCloud.count < Scan.minFeatureCount
-    }
+    }*/
     
     var boundingBoxExists: Bool {
         return scannedObject.boundingBox != nil

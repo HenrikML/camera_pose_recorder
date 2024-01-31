@@ -51,7 +51,7 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate, UI
     
     internal var screenCenter = CGPoint()
     
-    //internal var videoRecorder: VideoRecorder?
+    internal var videoRecorder: VideoRecorder?
     @objc internal dynamic var backCameraDeviceInput: AVCaptureDeviceInput?
     internal var frameCount: UInt = 0
     
@@ -128,6 +128,9 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate, UI
         
         displayWarningIfInLowPowerMode()
         
+        DispatchQueue.global().async {
+            self.videoRecorderWarmup()
+        }
         // Make sure the application launches in .startARSession state.
         // Entering this state will run() the ARSession.
         state = .startARSession
@@ -373,7 +376,6 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate, UI
                 let title = "Limited Tracking"
                 let message = "Low tracking quality - it is unlikely that a good reference object can be generated from this scan."
                 let buttonTitle = "Restart Scan"
-                
                 self.showAlert(title: title, message: message, buttonTitle: buttonTitle, showCancel: true) { _ in
                     self.state = .startARSession
                 }
@@ -474,11 +476,18 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate, UI
         }
     }
     
+    func session(_ session: ARSession, didUpdate frame: ARFrame) {
+        if let recorder = videoRecorder {
+            if captureStateValue == .capturing, recorder.isRecording {
+                self.processFrame(frame, time: frame.timestamp)
+            }
+        }
+    }
+    
     func renderer(_ renderer: SCNSceneRenderer, updateAtTime time: TimeInterval) {
         guard let frame = sceneView.session.currentFrame else { return }
         scan?.updateOnEveryFrame(frame)
-        testRun?.updateOnEveryFrame()
-        self.processFrame(frame)
+        //testRun?.updateOnEveryFrame()
     }
     
     func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {

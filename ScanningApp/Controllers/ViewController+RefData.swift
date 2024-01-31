@@ -22,10 +22,29 @@ extension ViewController
         if createRefDataDirectory() {
             writeBoundingBoxData()
             captureStateValue = .capturing
+            
+            let settings = getRGBSettings()
+            let transform = CGAffineTransformMakeRotation(CGFloat(Double.pi / 2))
+           
+            self.videoRecorder = VideoRecorder(settings: settings, transform: transform)
+            
+            self.videoRecorder?.startRecording()
         }
     }
     
+    func videoRecorderWarmup() {
+        
+        let settings = getRGBSettings()
+        let transform = CGAffineTransformMakeRotation(CGFloat(Double.pi / 2))
+       
+        self.videoRecorder = VideoRecorder(settings: settings, transform: transform)
+        self.videoRecorder?.warmup()
+    }
+    
     func stopReferenceDataCapture() {
+        videoRecorder?.stopRecording{
+            videoURL in self.saveReferenceVideo(tempURL: videoURL)
+        }
         captureStateValue = .ready
     }
     
@@ -40,7 +59,6 @@ extension ViewController
         do {
             try FileManager.default.createDirectory(atPath: folderURL!.path, withIntermediateDirectories: true)
             
-            try FileManager.default.createDirectory(atPath: folderURL!.appendingPathComponent("video").path, withIntermediateDirectories: true)
             try FileManager.default.createDirectory(atPath: folderURL!.appendingPathComponent("depth").path, withIntermediateDirectories: true)
             try FileManager.default.createDirectory(atPath: folderURL!.appendingPathComponent("confidence").path, withIntermediateDirectories: true)
         } catch
@@ -82,6 +100,25 @@ extension ViewController
         
         
         return true
+    }
+    
+    
+    func getRGBSettings() -> [String: Any] {
+        let settings: [String: Any] = [
+            AVVideoCodecKey: AVVideoCodecType.h264,
+            AVVideoWidthKey: self.imgRes?.width ?? 1920,
+            AVVideoHeightKey: self.imgRes?.height ?? 1440,
+            //AVVideoCompressionPropertiesKey: [
+            //    AVVideoPixelAspectRatioKey: [
+            //        AVVideoPixelAspectRatioHorizontalSpacingKey: 1,
+            //        AVVideoPixelAspectRatioVerticalSpacingKey: 1
+            //    ],
+            //    AVVideoMaxKeyFrameIntervalKey: 1,
+            //    AVVideoAverageBitRateKey: 16000000
+            //]
+        ]
+        
+        return settings
     }
     
     func getCurrentDateAsString() -> String
@@ -140,55 +177,51 @@ extension ViewController
         return sampleBuffer
     }
     
-    func processFrame(_ frame: ARFrame) {
+    func processFrame(_ frame: ARFrame, time: TimeInterval) {
         if captureStateValue == .ready {
             return
         }
         
+        
         defer {
             self.frameCount += 1
         }
-        let sampleRate: UInt = 4
+        //let sampleRate: UInt = 2
         
-        if #available(iOS 14.0, *), self.frameCount.isMultiple(of: sampleRate) {
+        if #available(iOS 14.0, *) {
             //let transform = CGAffineTransformMakeRotation(CGFloat(3 * Double.pi / 2))
             
-            let rgbImage = CIImage(cvPixelBuffer: frame.capturedImage)
+            let scale = CMTimeScale(NSEC_PER_SEC)
+            let pts = CMTime(value: CMTimeValue(time * Double(scale)),
+                             timescale: scale)
+            let pixelBuffer = frame.capturedImage
+            
+            if let rgbImage = self.getCMSampleBuffer(pixelBuffer: pixelBuffer, scale: scale, pts: pts) {
+                self.videoRecorder?.recordVideo(rgbImage)
+            }
+            
             let depthImage = frame.sceneDepth!.depthMap
             let confidenceImage = frame.sceneDepth!.confidenceMap!
             
-            let context = CIContext()
-            let index = self.frameCount/sampleRate
-            
-            let videoURL  = self.folderURL?.appendingPathComponent("video").appendingPathComponent("video_\(index).png")
+            let index = self.frameCount
             
             let depthURL  = self.folderURL?.appendingPathComponent("depth").appendingPathComponent("depth_\(index).bin")
             
             let confidenceURL  = self.folderURL?.appendingPathComponent("confidence").appendingPathComponent("confidence_\(index).bin")
-            let intrinsics = frame.camera.intrinsics
-            let extrinsics = frame.camera.transform
             
             let depthArray = depthMapToArray(pixelBuffer: depthImage)
             let confidenceArray = confidenceMapToArray(pixelBuffer: confidenceImage)
             
             DispatchQueue.global().async {
-                do {
-                    try  context.writePNGRepresentation(of: rgbImage,
-                                                        to: videoURL!,
-                                                        format: .RGBA16,
-                                                        colorSpace: rgbImage.colorSpace!)
-                    
-                    self.writeFloat32ArrayToFolder(array: depthArray,
+                self.writeFloat32ArrayToFolder(array: depthArray,
                                                    url: depthURL!)
                     
-                    self.writeUInt8ArrayToFolder(array: confidenceArray,
+                self.writeUInt8ArrayToFolder(array: confidenceArray,
                                                    url: confidenceURL!)
-                } catch {}
-                
             }
             
-            self.writeRGBCameraIntrinsics(intrinsics: intrinsics, frame: index)
-            self.writeRGBCameraExtrinsics(extrinsics: extrinsics, frame: index)
+            self.writeRGBCameraIntrinsics(intrinsics: frame.camera.intrinsics, frame: index)
+            self.writeRGBCameraExtrinsics(extrinsics: frame.camera.transform, frame: index)
         }
         
     }

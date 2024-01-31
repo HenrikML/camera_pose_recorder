@@ -12,6 +12,8 @@ class VideoRecorder {
     private var settings: [String: Any]
     private(set) var isRecording = false
     
+    
+    
     init(settings: [String: Any], transform: CGAffineTransform) {
         self.settings = settings
         self.transform = transform
@@ -50,20 +52,62 @@ class VideoRecorder {
     }
     
     func recordVideo(_ sampleBuffer: CMSampleBuffer) {
-        guard isRecording,
-              let assetWriter = assetWriter else {
+        guard isRecording, let assetWriter = assetWriter else {
+            print("ERROR: recordVideo failed")
             return
         }
         
-        if assetWriter.status == .unknown {
+        switch assetWriter.status {
+        case .unknown:
             assetWriter.startWriting()
             assetWriter.startSession(atSourceTime: CMSampleBufferGetPresentationTimeStamp(sampleBuffer))
-        
-        } else if assetWriter.status == .writing {
+            
             if let input = assetWriterInput,
                input.isReadyForMoreMediaData {
                 input.append(sampleBuffer)
             }
+        case .writing:
+            if let input = assetWriterInput,
+               input.isReadyForMoreMediaData {
+                input.append(sampleBuffer)
+            }
+        case .completed:
+            print("Asset writer completed")
+        case .failed:
+            if let error = assetWriter.error {
+                print(error)
+                fatalError(error.localizedDescription)
+            }
+        case .cancelled:
+            print("Asset writer failed")
+        default:
+            print("Default case")
         }
+    }
+    
+    func warmup() {
+        
+        let outputFileName = NSUUID().uuidString
+        let outputFileURL = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(outputFileName).appendingPathExtension("MOV")
+        
+        guard let assetWriter = try? AVAssetWriter(url: outputFileURL, fileType: .mov) else {
+            return
+        }
+        
+        let assetWriterInput = AVAssetWriterInput(mediaType: .video, outputSettings: settings)
+        assetWriterInput.expectsMediaDataInRealTime = true
+        assetWriterInput.transform = transform
+        assetWriter.add(assetWriterInput)
+        
+        self.assetWriter = assetWriter
+        self.assetWriterInput = assetWriterInput
+        
+        self.isRecording = true
+        
+        assetWriter.startWriting()
+        assetWriter.finishWriting{}
+        
+        self.isRecording = false
+        self.assetWriter = nil
     }
 }

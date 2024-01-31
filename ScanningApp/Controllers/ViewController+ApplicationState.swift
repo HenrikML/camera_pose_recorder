@@ -85,6 +85,7 @@ extension ViewController {
                 configuration.planeDetection = .horizontal
                 if #available(iOS 14.0, *) {
                     configuration.frameSemantics.insert(.sceneDepth)
+                    configuration.videoFormat = ARWorldTrackingConfiguration.supportedVideoFormats[1]
                 } else {
                     // Fallback on earlier versions
                 }
@@ -181,6 +182,7 @@ extension ViewController {
                 self.nextButton.setTitle("Finish", for: [])
                 // Disable plane detection (even if no plane has been found yet at this time) for performance reasons.
                 self.sceneView.stopPlaneDetection()
+                
             case .adjustingOrigin:
                 self.stopReferenceDataCapture()
                 print("State: Adjusting Origin")
