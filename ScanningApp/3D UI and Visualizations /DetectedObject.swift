@@ -29,7 +29,7 @@ class DetectedObject: SCNNode {
             customModel?.removeFromParentNode()
             customModel = nil
             originVis.removeFromParentNode()
-            ViewController.instance?.sceneView.prepare([model], completionHandler: { _ in
+            ScanViewController.instance?.sceneView.prepare([model], completionHandler: { _ in
                 self.addChildNode(model)
             })
             customModel = model
@@ -63,7 +63,7 @@ class DetectedObject: SCNNode {
         addChildNode(pointCloudVisualization)
         isHidden = true
         
-        set3DModel(ViewController.instance?.modelURL)
+        set3DModel(ScanViewController.instance?.modelURL)
     }
     
     required init?(coder aDecoder: NSCoder) {

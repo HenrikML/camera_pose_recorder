@@ -26,11 +26,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             """) // For details, see https://developer.apple.com/documentation/arkit
         }
         
+        self.window = UIWindow(frame: UIScreen.main.bounds)
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        
+        let viewController = storyboard.instantiateViewController(withIdentifier: "mainmenu_vc")
+        self.window?.rootViewController = viewController
+        self.window?.makeKeyAndVisible()
+        
         return true
     }
     
     func application(_ application: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {
-        if let viewController = self.window?.rootViewController as? ViewController {
+        if let viewController = self.window?.rootViewController as? ScanViewController {
             viewController.readFile(url)
             return true
         } else {
@@ -39,19 +46,19 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
     
     func applicationWillEnterForeground(_ application: UIApplication) {
-        if let viewController = self.window?.rootViewController as? ViewController {
+        if let viewController = self.window?.rootViewController as? ScanViewController {
             viewController.backFromBackground()
         }
     }
     
     func applicationWillResignActive(_ application: UIApplication) {
-        if let viewController = self.window?.rootViewController as? ViewController {
+        if let viewController = self.window?.rootViewController as? ScanViewController {
             viewController.blurView?.isHidden = false
         }
     }
     
     func applicationDidBecomeActive(_ application: UIApplication) {
-        if let viewController = self.window?.rootViewController as? ViewController {
+        if let viewController = self.window?.rootViewController as? ScanViewController {
             viewController.blurView?.isHidden = true
         }
     }

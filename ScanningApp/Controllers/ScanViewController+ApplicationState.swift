@@ -9,7 +9,7 @@ import Foundation
 import ARKit
 import SceneKit
 
-extension ViewController {
+extension ScanViewController {
     
     enum State {
         case startARSession
@@ -127,9 +127,9 @@ extension ViewController {
                 cancelMaxScanTimeTimer()
             }
             
-            NotificationCenter.default.post(name: ViewController.appStateChangedNotification,
+            NotificationCenter.default.post(name: ScanViewController.appStateChangedNotification,
                                             object: self,
-                                            userInfo: [ViewController.appStateUserInfoKey: self.state])
+                                            userInfo: [ScanViewController.appStateUserInfoKey: self.state])
         }
     }
     

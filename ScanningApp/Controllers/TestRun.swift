@@ -111,7 +111,7 @@ class TestRun {
         cancelNoDetectionTimer()
         noDetectionTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: false) { _ in
             self.cancelNoDetectionTimer()
-            ViewController.instance?.displayMessage("""
+            ScanViewController.instance?.displayMessage("""
                 Unable to detect the object.
                 Please point the device at the scanned object, rescan or add another scan
                 of this object in the current environment.

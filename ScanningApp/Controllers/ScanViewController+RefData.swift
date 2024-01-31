@@ -10,7 +10,7 @@ import Foundation
 import AVFoundation
 import ARKit
 
-extension ViewController
+extension ScanViewController
 {
     enum CaptureState {
         case ready

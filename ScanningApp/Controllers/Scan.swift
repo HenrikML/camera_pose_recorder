@@ -49,7 +49,7 @@ class Scan {
                 Do you want to go back and adjust the bounding box of the scanned object?
                 """
                 let previousState = stateValue
-                ViewController.instance?.showAlert(title: title, message: message, buttonTitle: "Yes", showCancel: true) { _ in
+                ScanViewController.instance?.showAlert(title: title, message: message, buttonTitle: "Yes", showCancel: true) { _ in
                     self.state = previousState
                 }
             case .scanning:
@@ -74,7 +74,7 @@ class Scan {
                     It is likely that it won't detect from all angles.
                     Do you want to go back and continue the scan?
                     """
-                    ViewController.instance?.showAlert(title: title, message: message, buttonTitle: "Yes", showCancel: true) { _ in
+                    ScanViewController.instance?.showAlert(title: title, message: message, buttonTitle: "Yes", showCancel: true) { _ in
                         self.state = .scanning
                     }
                 }
@@ -116,7 +116,7 @@ class Scan {
     private var hasWarnedAboutLowLight = false
     
     private var isFirstScan: Bool {
-        return ViewController.instance?.referenceObjectToMerge == nil
+        return ScanViewController.instance?.referenceObjectToMerge == nil
     }
     
     static let minFeatureCount = 100
@@ -129,7 +129,7 @@ class Scan {
         
         NotificationCenter.default.addObserver(self,
                                                selector: #selector(self.applicationStateChanged(_:)),
-                                               name: ViewController.appStateChangedNotification,
+                                               name: ScanViewController.appStateChangedNotification,
                                                object: nil)
         
         self.sceneView.scene.rootNode.addChildNode(self.scannedObject)
@@ -143,7 +143,7 @@ class Scan {
     
     @objc
     private func applicationStateChanged(_ notification: Notification) {
-        guard let appState = notification.userInfo?[ViewController.appStateUserInfoKey] as? ViewController.State else { return }
+        guard let appState = notification.userInfo?[ScanViewController.appStateUserInfoKey] as? ScanViewController.State else { return }
         switch appState {
         case .scanning:
             scannedObject.isHidden = false
@@ -349,7 +349,7 @@ class Scan {
                 hasWarnedAboutLowLight = true
                 let title = "Too dark for scanning"
                 let message = "Consider moving to an environment with more light."
-                ViewController.instance?.showAlert(title: title, message: message)
+                ScanViewController.instance?.showAlert(title: title, message: message)
             }
             /*
             // Try a preliminary creation of the reference object based off the current
@@ -443,18 +443,18 @@ class Scan {
                     self.scannedReferenceObject = referenceObject.applyingTransform(origin.simdTransform)
                     self.scannedReferenceObject!.name = self.scannedObject.scanName
                     
-                    if let referenceObjectToMerge = ViewController.instance?.referenceObjectToMerge {
-                        ViewController.instance?.referenceObjectToMerge = nil
+                    if let referenceObjectToMerge = ScanViewController.instance?.referenceObjectToMerge {
+                        ScanViewController.instance?.referenceObjectToMerge = nil
                         
                         // Show activity indicator during the merge.
-                        ViewController.instance?.showAlert(title: "", message: "Merging previous scan into this scan...", buttonTitle: nil)
+                        ScanViewController.instance?.showAlert(title: "", message: "Merging previous scan into this scan...", buttonTitle: nil)
                         
                         // Try to merge the object which was just scanned with the existing one.
                         self.scannedReferenceObject?.mergeInBackground(with: referenceObjectToMerge, completion: { (mergedObject, error) in
 
                             if let mergedObject = mergedObject {
                                 self.scannedReferenceObject = mergedObject
-                                ViewController.instance?.showAlert(title: "Merge successful",
+                                ScanViewController.instance?.showAlert(title: "Merge successful",
                                                                    message: "The previous scan has been merged into this scan.", buttonTitle: "OK")
                                 creationFinished(self.scannedReferenceObject)
 
@@ -473,7 +473,7 @@ class Scan {
                                     self.scannedReferenceObject = referenceObjectToMerge
                                     creationFinished(self.scannedReferenceObject)
                                 }
-                                ViewController.instance?.showAlert(title: "Merge failed", message: message, actions: [thisScan, previousScan])
+                                ScanViewController.instance?.showAlert(title: "Merge failed", message: message, actions: [thisScan, previousScan])
                             }
                         })
                     } else {

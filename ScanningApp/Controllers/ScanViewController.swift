@@ -10,12 +10,12 @@ import SceneKit
 import ARKit
 import AVFoundation
 
-class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate, UIDocumentPickerDelegate {
+class ScanViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate, UIDocumentPickerDelegate {
     
     static let appStateChangedNotification = Notification.Name("ApplicationStateChanged")
     static let appStateUserInfoKey = "AppState"
     
-    static var instance: ViewController?
+    static var instance: ScanViewController?
     
     @IBOutlet weak var sceneView: ARSCNView!
     @IBOutlet weak var blurView: UIVisualEffectView!
@@ -81,8 +81,8 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate, UI
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        
-        ViewController.instance = self
+        ScanViewController.instance = self
+        blurView?.isHidden = true
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -176,7 +176,8 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate, UI
     }
     
     @IBAction func previousButtonTapped(_ sender: Any) {
-        switchToPreviousState()
+        //switchToPreviousState()
+        self.dismiss(animated: true, completion: nil)
     }
     
     @IBAction func nextButtonTapped(_ sender: Any) {
@@ -520,7 +521,7 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate, UI
         if self.state == .testing {
             
             // Show activity indicator during the merge.
-            ViewController.instance?.showAlert(title: "", message: "Merging other scan into this scan...", buttonTitle: nil)
+            ScanViewController.instance?.showAlert(title: "", message: "Merging other scan into this scan...", buttonTitle: nil)
             
             // Try to merge the object which was just scanned with the existing one.
             self.testRun?.referenceObject?.mergeInBackground(with: referenceObject, completion: { (mergedObject, error) in

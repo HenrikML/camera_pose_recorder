@@ -144,7 +144,7 @@ class ScannedObject: SCNNode {
     
     private func updateOrCreateGhostBoundingBox() {
         // Perform a hit test against the feature point cloud.
-        guard let result = sceneView.smartHitTest(ViewController.instance!.screenCenter) else {
+        guard let result = sceneView.smartHitTest(ScanViewController.instance!.screenCenter) else {
             if let ghostBoundingBox = ghostBoundingBox {
                 ghostBoundingBox.removeFromParentNode()
                 self.ghostBoundingBox = nil
