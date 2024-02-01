@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="22505" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="BV1-FR-VrT">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="22505" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="d7z-sk-4wv">
     <device id="retina6_12" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
@@ -304,7 +304,7 @@
                     </connections>
                 </pongPressGestureRecognizer>
             </objects>
-            <point key="canvasLocation" x="140" y="133.00492610837438"/>
+            <point key="canvasLocation" x="500" y="132"/>
         </scene>
         <!--Main Menu View Controller-->
         <scene sceneID="ger-Ae-CYg">
@@ -315,19 +315,18 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="QCm-67-N9F">
-                                <rect key="frame" x="165" y="97" width="62" height="35"/>
+                                <rect key="frame" x="165" y="326" width="62" height="34.333333333333258"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <state key="normal" title="Button"/>
-                                <buttonConfiguration key="configuration" style="plain" title="Scan"/>
+                                <buttonConfiguration key="configuration" style="filled" title="Scan" titleAlignment="center"/>
                                 <connections>
                                     <action selector="didTapScanButton" destination="d7z-sk-4wv" eventType="touchUpInside" id="IWr-cH-bes"/>
                                 </connections>
                             </button>
                             <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="MOO-1H-50A">
-                                <rect key="frame" x="153" y="219" width="87" height="35"/>
+                                <rect key="frame" x="153" y="404" width="87" height="34.333333333333258"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <state key="normal" title="Button"/>
-                                <buttonConfiguration key="configuration" style="plain" title="Settings"/>
+                                <buttonConfiguration key="configuration" style="filled" title="Settings"/>
                             </button>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="2Gg-vc-oVV"/>
@@ -340,7 +339,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="Nws-Vg-cFm" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="136.64122137404578" y="812.67605633802816"/>
+            <point key="canvasLocation" x="-489" y="132"/>
         </scene>
     </scenes>
     <designables>

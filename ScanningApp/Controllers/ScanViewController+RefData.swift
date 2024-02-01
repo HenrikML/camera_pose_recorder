@@ -25,20 +25,12 @@ extension ScanViewController
             
             let settings = getRGBSettings()
             let transform = CGAffineTransformMakeRotation(CGFloat(Double.pi / 2))
+            //let transform = CGAffineTransformMakeRotation(0)
            
             self.videoRecorder = VideoRecorder(settings: settings, transform: transform)
             
             self.videoRecorder?.startRecording()
         }
-    }
-    
-    func videoRecorderWarmup() {
-        
-        let settings = getRGBSettings()
-        let transform = CGAffineTransformMakeRotation(CGFloat(Double.pi / 2))
-       
-        self.videoRecorder = VideoRecorder(settings: settings, transform: transform)
-        self.videoRecorder?.warmup()
     }
     
     func stopReferenceDataCapture() {

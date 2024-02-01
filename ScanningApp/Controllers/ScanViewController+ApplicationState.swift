@@ -112,7 +112,7 @@ extension ScanViewController {
                 }
                 testRun = nil
                 
-                startMaxScanTimeTimer()
+                //startMaxScanTimeTimer()
             case .testing:
                 print("State: Testing")
                 self.setNavigationBarTitle("Test")

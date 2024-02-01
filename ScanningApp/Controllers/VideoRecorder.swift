@@ -85,6 +85,7 @@ class VideoRecorder {
         }
     }
     
+    //Warmup function to prevent stuttering
     func warmup() {
         
         let outputFileName = NSUUID().uuidString

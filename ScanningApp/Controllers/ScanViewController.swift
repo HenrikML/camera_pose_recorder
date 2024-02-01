@@ -128,9 +128,15 @@ class ScanViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate
         
         displayWarningIfInLowPowerMode()
         
+        // Instantiate video recorder to prevent poor performance during scan
         DispatchQueue.global().async {
-            self.videoRecorderWarmup()
+            let settings = self.getRGBSettings()
+            let transform = CGAffineTransformMakeRotation(0)
+           
+            self.videoRecorder = VideoRecorder(settings: settings, transform: transform)
+            self.videoRecorder?.warmup()
         }
+        
         // Make sure the application launches in .startARSession state.
         // Entering this state will run() the ARSession.
         state = .startARSession

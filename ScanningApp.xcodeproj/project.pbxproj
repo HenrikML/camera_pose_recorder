@@ -28,6 +28,7 @@
 		4044065B2B4DC88E0044CC4C /* VideoRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4044065A2B4DC88E0044CC4C /* VideoRecorder.swift */; };
 		405EE4652B49AE3800FD9B68 /* ScanViewController+RefData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 405EE4642B49AE3800FD9B68 /* ScanViewController+RefData.swift */; };
 		406AA20A2B6AB75100D98BD2 /* MainMenuViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 406AA2092B6AB75100D98BD2 /* MainMenuViewController.swift */; };
+		408CAB542B6BB31400FEDD6A /* SettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 408CAB532B6BB31400FEDD6A /* SettingsViewController.swift */; };
 		C42056AE20C75C9D003754C1 /* Snapping.swift in Sources */ = {isa = PBXBuildFile; fileRef = C42056AD20C75C9D003754C1 /* Snapping.swift */; };
 		C4543844207F38460016097A /* art.scnassets in Resources */ = {isa = PBXBuildFile; fileRef = C4543843207F38460016097A /* art.scnassets */; };
 		C45BF9CA208E11420070CB19 /* ScanViewController+NavigationBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = C45BF9C9208E11420070CB19 /* ScanViewController+NavigationBar.swift */; };
@@ -71,6 +72,7 @@
 		4044065A2B4DC88E0044CC4C /* VideoRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoRecorder.swift; sourceTree = "<group>"; };
 		405EE4642B49AE3800FD9B68 /* ScanViewController+RefData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ScanViewController+RefData.swift"; sourceTree = "<group>"; };
 		406AA2092B6AB75100D98BD2 /* MainMenuViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainMenuViewController.swift; sourceTree = "<group>"; };
+		408CAB532B6BB31400FEDD6A /* SettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewController.swift; sourceTree = "<group>"; };
 		8A2A1D055879AB6F2D13B830 /* LICENSE.txt */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = LICENSE.txt; sourceTree = "<group>"; };
 		AA284D3298D408760002CBBA /* SampleCode.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = SampleCode.xcconfig; path = Configuration/SampleCode.xcconfig; sourceTree = "<group>"; };
 		C42056AD20C75C9D003754C1 /* Snapping.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Snapping.swift; sourceTree = "<group>"; };
@@ -188,6 +190,7 @@
 				390033F9206F15F700C61E5D /* Scan.swift */,
 				39D6E976207A8878002CF536 /* TestRun.swift */,
 				4044065A2B4DC88E0044CC4C /* VideoRecorder.swift */,
+				408CAB532B6BB31400FEDD6A /* SettingsViewController.swift */,
 			);
 			name = Controllers;
 			path = ScanningApp/Controllers;
@@ -334,6 +337,7 @@
 				39778216209A704B003AA644 /* DetectedBoundingBox.swift in Sources */,
 				390033E7206EE9F100C61E5D /* ObjectOrigin.swift in Sources */,
 				C4A938C5208799D3008D5D13 /* Tile.swift in Sources */,
+				408CAB542B6BB31400FEDD6A /* SettingsViewController.swift in Sources */,
 				C479BF2E201F2C790030C57A /* ScanViewController+Gestures.swift in Sources */,
 				395C994C200707A30025413C /* ScanViewController.swift in Sources */,
 				C46B56372016079A001C41CE /* ShareScanViewController.swift in Sources */,

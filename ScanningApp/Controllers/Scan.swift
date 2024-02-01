@@ -343,6 +343,7 @@ class Scan {
             }
         }
         */
+        /*
         if state == .ready || state == .defineBoundingBox || state == .scanning {
             
             if let lightEstimate = frame.lightEstimate, lightEstimate.ambientIntensity < 500, !hasWarnedAboutLowLight, isFirstScan {
@@ -351,7 +352,6 @@ class Scan {
                 let message = "Consider moving to an environment with more light."
                 ScanViewController.instance?.showAlert(title: title, message: message)
             }
-            /*
             // Try a preliminary creation of the reference object based off the current
             // bounding box & update the point cloud visualization based on that.
             if let boundingBox = scannedObject.eitherBoundingBox {
@@ -379,8 +379,8 @@ class Scan {
                 if let currentPoints = frame.rawFeaturePoints {
                     pointCloud.update(with: currentPoints)
                 }
-            }*/
-        }
+            }
+        }*/
         
         // Update bounding box side coloring to visualize scanning coverage
         if state == .scanning {
