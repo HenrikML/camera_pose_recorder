@@ -66,8 +66,8 @@ class Scan {
                 ViewController.instance?.showAlert(title: title, message: message, buttonTitle: "Yes", showCancel: true) { _ in
                     self.state = .scanning
                 }*/
-            case .adjustingOrigin where stateValue == .scanning:
-                if let boundingBox = scannedObject.boundingBox, boundingBox.progressPercentage < 100 {
+            //case .adjustingOrigin where stateValue == .scanning:
+                /*if let boundingBox = scannedObject.boundingBox, boundingBox.progressPercentage < 100 {
                     let title = "Scan not complete"
                     let message = """
                     The object was not scanned from all sides, scanning progress is \(boundingBox.progressPercentage)%.
@@ -77,7 +77,7 @@ class Scan {
                     ScanViewController.instance?.showAlert(title: title, message: message, buttonTitle: "Yes", showCancel: true) { _ in
                         self.state = .scanning
                     }
-                }
+                }*/
             default:
                 break
             }
@@ -412,17 +412,19 @@ class Scan {
             return false
         }
         
+        return true
+        /*
         // The bounding box should not be too small and not too large.
         // Note: 3D object detection is optimized for tabletop scenarios.
-        let validSizeRange: ClosedRange<Float> = 0.01...5.0
+        let validSizeRange: ClosedRange<Float> = 0.001...5.0
         if validSizeRange.contains(boundingBox.extent.x) && validSizeRange.contains(boundingBox.extent.y) &&
             validSizeRange.contains(boundingBox.extent.z) {
             // Check that the volume of the bounding box is at least 500 cubic centimeters.
             let volume = boundingBox.extent.x * boundingBox.extent.y * boundingBox.extent.z
-            return volume >= 0.0005
+            return true
         }
         
-        return false
+        return false */
     }
     
     /// - Tag: ExtractReferenceObject

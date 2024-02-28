@@ -19,6 +19,9 @@ extension ScanViewController
     
     func startReferenceDataCapture() {
         frameCount = 0
+        
+        
+        
         if createRefDataDirectory() {
             writeBoundingBoxData()
             captureStateValue = .capturing
@@ -34,6 +37,10 @@ extension ScanViewController
     }
     
     func stopReferenceDataCapture() {
+        if captureStateValue != .capturing {
+            return
+        }
+        
         videoRecorder?.stopRecording{
             videoURL in self.saveReferenceVideo(tempURL: videoURL)
         }
@@ -59,7 +66,7 @@ extension ScanViewController
         }
         
         // Initialize RGB intrinsics file
-        guard let rgbIntFilename = self.folderURL?.appendingPathComponent("rgb_intrinsics.txt") else { return false }
+        guard let rgbIntFilename = self.folderURL?.appendingPathComponent(intrinsicMatrixFileName) else { return false }
         let rgbIntHeader = "frame,f_x,f_y,sigma_x,sigma_y\n"
        
         do {
@@ -67,29 +74,28 @@ extension ScanViewController
         } catch {}
         
         // Initialize RGB extrinsics file
-        guard let rgbExtFilename = self.folderURL?.appendingPathComponent("rgb_extrinsics.txt") else { return false }
+        guard let rgbExtFilename = self.folderURL?.appendingPathComponent(transformMatrixFileName) else { return false }
         let rgbExtHeader = "frame," +
         "m_11,m_21,m_31,m_41," +
         "m_12,m_22,m_32,m_42," +
         "m_13,m_23,m_33,m_43," +
-        "m_14,m_24,m_34,m_44,\n"
+        "m_14,m_24,m_34,m_44\n"
         
         do {
             try rgbExtHeader.write(to: rgbExtFilename, atomically: true, encoding: .utf8)
         } catch {}
         
         // Initialize bounding box file
-        guard let bbFilename = self.folderURL?.appendingPathComponent("bounding_box.txt") else { return false }
+        guard let bbFilename = self.folderURL?.appendingPathComponent(boundingBoxFileName) else { return false }
         let bbHeader = "extent_x,extent_y,extent_z," +
         "m_11,m_21,m_31,m_41," +
         "m_12,m_22,m_32,m_42," +
         "m_13,m_23,m_33,m_43," +
-        "m_14,m_24,m_34,m_44,\n"
+        "m_14,m_24,m_34,m_44\n"
         
         do {
             try bbHeader.write(to: bbFilename, atomically: true, encoding: .utf8)
         } catch {}
-        
         
         return true
     }
@@ -99,15 +105,7 @@ extension ScanViewController
         let settings: [String: Any] = [
             AVVideoCodecKey: AVVideoCodecType.h264,
             AVVideoWidthKey: self.imgRes?.width ?? 1920,
-            AVVideoHeightKey: self.imgRes?.height ?? 1440,
-            //AVVideoCompressionPropertiesKey: [
-            //    AVVideoPixelAspectRatioKey: [
-            //        AVVideoPixelAspectRatioHorizontalSpacingKey: 1,
-            //        AVVideoPixelAspectRatioVerticalSpacingKey: 1
-            //    ],
-            //    AVVideoMaxKeyFrameIntervalKey: 1,
-            //    AVVideoAverageBitRateKey: 16000000
-            //]
+            AVVideoHeightKey: self.imgRes?.height ?? 1440
         ]
         
         return settings
@@ -169,6 +167,18 @@ extension ScanViewController
         return sampleBuffer
     }
     
+    var transformMatrixFileName: String {
+        return "cam_transform.txt"
+    }
+    
+    var intrinsicMatrixFileName: String {
+        return "cam_intrinsics.txt"
+    }
+    
+    var boundingBoxFileName: String {
+        return "bounding_box.txt"
+    }
+    
     func processFrame(_ frame: ARFrame, time: TimeInterval) {
         if captureStateValue == .ready {
             return
@@ -212,14 +222,18 @@ extension ScanViewController
                                                    url: confidenceURL!)
             }
             
+            //let viewPortSize = CGSize(width: 1920, height: 1440)
+            
             self.writeRGBCameraIntrinsics(intrinsics: frame.camera.intrinsics, frame: index)
-            self.writeRGBCameraExtrinsics(extrinsics: frame.camera.transform, frame: index)
+            self.write4x4Matrix(matrix: frame.camera.transform, 
+                                frame: index,
+                                fileName: transformMatrixFileName)
         }
         
     }
     
     func writeRGBCameraIntrinsics(intrinsics: simd_float3x3, frame: UInt) {
-        guard let filename = self.folderURL?.appendingPathComponent("rgb_intrinsics.txt") else { return }
+        guard let filename = self.folderURL?.appendingPathComponent(intrinsicMatrixFileName) else { return }
         //frame,f_x,f_y,sigma_x,sigma_y
         let data = "\(frame)," +
             "\(intrinsics.columns.0.x)," +
@@ -232,15 +246,15 @@ extension ScanViewController
         } catch {}
     }
     
-    func writeRGBCameraExtrinsics(extrinsics: simd_float4x4, frame: UInt) {
-        guard let filename = self.folderURL?.appendingPathComponent("rgb_extrinsics.txt") else { return }
+    func write4x4Matrix(matrix: simd_float4x4, frame: UInt, fileName: String) {
+        guard let filename = self.folderURL?.appendingPathComponent(fileName) else { return }
         
         //frame,m_11,m_12,m_13,m_14,m_21,m_22,m_23,m_24,m_31,m_32,m_33,m_34,m_41,m_42,m_43,m_44
         let data = "\(frame)," +
-            "\(extrinsics.columns.0.x),\(extrinsics.columns.1.x),\(extrinsics.columns.2.x),\(extrinsics.columns.3.x)," +
-            "\(extrinsics.columns.0.y),\(extrinsics.columns.1.y),\(extrinsics.columns.2.y),\(extrinsics.columns.3.y)," +
-            "\(extrinsics.columns.0.z),\(extrinsics.columns.1.z),\(extrinsics.columns.2.z),\(extrinsics.columns.3.z)," +
-        "\(extrinsics.columns.0.x),\(extrinsics.columns.1.y),\(extrinsics.columns.2.w),\(extrinsics.columns.3.w)\n"
+            "\(matrix.columns.0.x),\(matrix.columns.1.x),\(matrix.columns.2.x),\(matrix.columns.3.x)," +
+            "\(matrix.columns.0.y),\(matrix.columns.1.y),\(matrix.columns.2.y),\(matrix.columns.3.y)," +
+            "\(matrix.columns.0.z),\(matrix.columns.1.z),\(matrix.columns.2.z),\(matrix.columns.3.z)," +
+        "\(matrix.columns.0.w),\(matrix.columns.1.w),\(matrix.columns.2.w),\(matrix.columns.3.w)\n"
         
         do {
             try data.appendToURL(fileURL: filename)

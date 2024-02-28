@@ -21,6 +21,7 @@ class ScanViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate
     @IBOutlet weak var blurView: UIVisualEffectView!
     @IBOutlet weak var nextButton: RoundedButton!
     var backButton: UIBarButtonItem!
+    var menuButton: UIBarButtonItem!
     var mergeScanButton: UIBarButtonItem!
     @IBOutlet weak var instructionView: UIVisualEffectView!
     @IBOutlet weak var instructionLabel: MessageLabel!
@@ -81,12 +82,14 @@ class ScanViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        navigationController?.setNavigationBarHidden(true, animated: animated)
         ScanViewController.instance = self
         blurView?.isHidden = true
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
+        navigationController?.setNavigationBarHidden(false, animated: animated)
         sceneView.session.pause()
     }
     
@@ -96,6 +99,11 @@ class ScanViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate
         
         sceneView.delegate = self
         sceneView.session.delegate = self
+        
+        if UserDefaults.standard.bool(forKey: "world_origin")
+        {
+            self.sceneView.debugOptions.insert(SCNDebugOptions.showWorldOrigin)
+        }
         
         // Prevent the screen from being dimmed after a while.
         UIApplication.shared.isIdleTimerDisabled = true
@@ -151,15 +159,27 @@ class ScanViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate
     }
     
     // MARK: - UI Event Handling
+    var resetBoundingBox = false
     
     @IBAction func restartButtonTapped(_ sender: Any) {
+        
         if let scan = scan, scan.boundingBoxExists {
-            let title = "Start over?"
-            let message = "Discard the current scan and start over?"
-            self.showAlert(title: title, message: message, buttonTitle: "Yes", showCancel: true) { _ in
-                self.state = .startARSession
-            }
-        } else if testRun != nil {
+            let title = "Starting new scan"
+            let message = "Would you like to keep the current bounding box?"
+            self.showAlert(title: title,
+                           message: message,
+                           buttonTitle: "Yes",
+                           button2Title: "No",
+                           showCancel: false, 
+                           buttonHandler: { _ in
+                                self.state = .scanning
+                                self.scan?.state = .defineBoundingBox
+                            },
+                           button2Handler: { _ in
+                                self.state = .startARSession
+                            })
+        }
+        /*else if testRun != nil {
             let title = "Start over?"
             let message = "Discard this scan and start over?"
             self.showAlert(title: title, message: message, buttonTitle: "Yes", showCancel: true) { _ in
@@ -167,7 +187,7 @@ class ScanViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate
             }
         } else {
             self.state = .startARSession
-        }
+        }*/
     }
     
     func backFromBackground() {
@@ -184,6 +204,13 @@ class ScanViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate
     @IBAction func previousButtonTapped(_ sender: Any) {
         //switchToPreviousState()
         self.dismiss(animated: true, completion: nil)
+    }
+    
+    
+    @IBAction func menuButtonTapped(_ sender: Any) {
+        if let navController = self.navigationController {
+            navController.popViewController(animated: true)
+        }
     }
     
     @IBAction func nextButtonTapped(_ sender: Any) {
@@ -287,6 +314,23 @@ class ScanViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate
         self.showAlert(title: title, message: message, actions: actions)
     }
     
+    
+    func showAlert(title: String, message: String, buttonTitle: String? = "OK", button2Title: String? = "Abort", showCancel: Bool = false, buttonHandler: ((UIAlertAction) -> Void)? = nil, button2Handler: ((UIAlertAction) -> Void)? = nil) {
+        print(title + "\n" + message)
+        
+        var actions = [UIAlertAction]()
+        if let buttonTitle = buttonTitle {
+            actions.append(UIAlertAction(title: buttonTitle, style: .default, handler: buttonHandler))
+        }
+        if let button2Title = button2Title {
+            actions.append(UIAlertAction(title: button2Title, style: .default, handler: button2Handler))
+        }
+        if showCancel {
+            actions.append(UIAlertAction(title: "Cancel", style: .cancel))
+        }
+        self.showAlert(title: title, message: message, actions: actions)
+    }
+    
     func showAlert(title: String, message: String, actions: [UIAlertAction]) {
         let showAlertBlock = {
             let alertController = UIAlertController(title: title, message: message, preferredStyle: .alert)
@@ -381,9 +425,10 @@ class ScanViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate
             guard let scan = self.scan else { return }
             if scan.state == .defineBoundingBox || scan.state == .scanning || scan.state == .adjustingOrigin {
                 let title = "Limited Tracking"
-                let message = "Low tracking quality - it is unlikely that a good reference object can be generated from this scan."
+                let message = "Low tracking quality - it is unlikely that the reference data is accurate."
                 let buttonTitle = "Restart Scan"
                 self.showAlert(title: title, message: message, buttonTitle: buttonTitle, showCancel: true) { _ in
+                    self.stopReferenceDataCapture()
                     self.state = .startARSession
                 }
             }

@@ -84,14 +84,18 @@ extension ScanViewController {
                 let configuration = ARWorldTrackingConfiguration()
                 configuration.planeDetection = .horizontal
                 if #available(iOS 14.0, *) {
+                    let selectedFormat = UserDefaults.standard.integer(forKey: "video_format")
                     configuration.frameSemantics.insert(.sceneDepth)
-                    configuration.videoFormat = ARWorldTrackingConfiguration.supportedVideoFormats[1]
+                    configuration.videoFormat = ARWorldTrackingConfiguration.supportedVideoFormats[selectedFormat]
+                    configuration.isAutoFocusEnabled = UserDefaults.standard.bool(forKey: "auto_focus")
+                    
                 } else {
                     // Fallback on earlier versions
                 }
                 sceneView.session.run(configuration, options: .resetTracking)
                 cancelMaxScanTimeTimer()
                 cancelMessageExpirationTimer()
+                stopReferenceDataCapture()
             case .notReady:
                 print("State: Not ready to scan")
                 scan = nil
@@ -146,6 +150,7 @@ extension ScanViewController {
                 self.setNavigationBarTitle("Ready to scan")
                 self.showBackButton(false)
                 self.nextButton.setTitle("Next", for: [])
+                self.nextButton.isHidden = false
                 self.loadModelButton.isHidden = true
                 self.flashlightButton.isHidden = true
                 if scan.ghostBoundingBoxExists {
@@ -165,6 +170,7 @@ extension ScanViewController {
                 self.nextButton.isEnabled = scan.boundingBoxExists
                 self.loadModelButton.isHidden = true
                 self.flashlightButton.isHidden = true
+                self.nextButton.isHidden = false
                 self.nextButton.setTitle("Scan", for: [])
             case .scanning:
                 self.startReferenceDataCapture()
@@ -180,20 +186,28 @@ extension ScanViewController {
                 self.loadModelButton.isHidden = true
                 self.flashlightButton.isHidden = true
                 self.nextButton.setTitle("Finish", for: [])
+                self.nextButton.isHidden = false
                 // Disable plane detection (even if no plane has been found yet at this time) for performance reasons.
                 self.sceneView.stopPlaneDetection()
                 
             case .adjustingOrigin:
                 self.stopReferenceDataCapture()
                 print("State: Adjusting Origin")
-                self.displayInstruction(Message("Adjust origin using gestures.\n" +
-                    "You can load a *.usdz 3D model overlay."))
-                self.setNavigationBarTitle("Adjust origin")
-                self.showBackButton(true)
-                self.nextButton.isEnabled = true
-                self.loadModelButton.isHidden = false
+                /*self.displayInstruction(Message("Adjust origin using gestures.\n" +
+                    "You can load a *.usdz 3D model overlay."))*/
+                self.instructionsVisible = false
+                self.setNavigationBarTitle("Scan completed")
+                self.showBackButton(false)
+                self.nextButton.isEnabled = false
+                self.nextButton.isHidden = true
+                self.loadModelButton.isHidden = true
                 self.flashlightButton.isHidden = true
                 self.nextButton.setTitle("Test", for: [])
+                let title = "Scan complete"
+                let message = "Would you like to start another scan?"
+                self.showAlert(title: title, message: message, buttonTitle: "Yes", showCancel: true) { _ in
+                    self.restartButtonTapped(self)
+                }
             }
         }
     }

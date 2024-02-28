@@ -26,12 +26,29 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             """) // For details, see https://developer.apple.com/documentation/arkit
         }
         
+        if #unavailable(iOS 15.0) {
+            fatalError("Incorrect iOS version. iOS 15.0 or greater is required.")
+        }
+        
         self.window = UIWindow(frame: UIScreen.main.bounds)
         let storyboard = UIStoryboard(name: "Main", bundle: nil)
         
-        let viewController = storyboard.instantiateViewController(withIdentifier: "mainmenu_vc")
-        self.window?.rootViewController = viewController
+        let rootController = storyboard.instantiateViewController(withIdentifier: "nav_controller")
+        self.window?.rootViewController = rootController
         self.window?.makeKeyAndVisible()
+        
+        
+        if UserDefaults.standard.object(forKey: "video_format") == nil {
+            UserDefaults.standard.setValue(1, forKey: "video_format")
+        }
+        
+        if UserDefaults.standard.object(forKey: "auto_focus") == nil {
+            UserDefaults.standard.setValue(true, forKey: "auto_focus")
+        }
+        
+        if UserDefaults.standard.object(forKey: "world_origin") == nil {
+            UserDefaults.standard.setValue(false, forKey: "world_origin")
+        }
         
         return true
     }

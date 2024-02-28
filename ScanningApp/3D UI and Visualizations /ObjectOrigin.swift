@@ -296,7 +296,7 @@ class ObjectOrigin: SCNNode {
         case .ready, .defineBoundingBox, .scanning:
             self.isHidden = true
         case .adjustingOrigin:
-            self.isHidden = false
+            self.isHidden = true
         }
     }
     
