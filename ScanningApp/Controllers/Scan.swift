@@ -250,6 +250,8 @@ class Scan {
         }
     }
     
+    // TODO: Remove bounding box rotation + scaling with gestures
+    
     func didLongPress(_ gesture: UILongPressGestureRecognizer) {
         if state == .ready {
             state = .defineBoundingBox

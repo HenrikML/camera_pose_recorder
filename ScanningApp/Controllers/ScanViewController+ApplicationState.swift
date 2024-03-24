@@ -81,6 +81,8 @@ extension ScanViewController {
                 // Make sure the SCNScene is cleared of any SCNNodes from previous scans.
                 sceneView.scene = SCNScene()
                 
+                self.enableSliders(isEnabled: false)
+                
                 let configuration = ARWorldTrackingConfiguration()
                 configuration.planeDetection = .horizontal
                 if #available(iOS 14.0, *) {
@@ -163,8 +165,9 @@ extension ScanViewController {
             case .defineBoundingBox:
                 self.stopReferenceDataCapture()
                 print("State: Define bounding box")
+                /*
                 self.displayInstruction(Message("Position and resize bounding box using gestures.\n" +
-                    "Long press sides to push/pull them in or out. "))
+                    "Long press sides to push/pull them in or out. "))*/
                 self.setNavigationBarTitle("Define bounding box")
                 self.showBackButton(true)
                 self.nextButton.isEnabled = scan.boundingBoxExists
@@ -173,6 +176,7 @@ extension ScanViewController {
                 self.nextButton.isHidden = false
                 self.nextButton.setTitle("Scan", for: [])
             case .scanning:
+                self.enableSliders(isEnabled: false)
                 self.startReferenceDataCapture()
                 self.displayInstruction(Message("Scan the object from all sides that you are " +
                     "interested in. Do not move the object while scanning!"))
@@ -287,6 +291,7 @@ extension ScanViewController {
     func boundingBoxWasCreated(_ notification: Notification) {
         if let scan = scan, scan.state == .defineBoundingBox {
             DispatchQueue.main.async {
+                self.enableSliders(isEnabled: true)
                 self.nextButton.isEnabled = true
             }
         }
