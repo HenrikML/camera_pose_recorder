@@ -252,11 +252,15 @@ class Scan {
     
     // TODO: Remove bounding box rotation + scaling with gestures
     
+    func setBoundingBoxScale(scale : SIMD3<Float>) {
+        scannedObject.setBoundingBoxScale(scale: scale)
+    }
+    
     func didLongPress(_ gesture: UILongPressGestureRecognizer) {
         if state == .ready {
             state = .defineBoundingBox
         }
-        
+        /*
         if state == .defineBoundingBox || state == .scanning {
             switch gesture.state {
             case .possible:
@@ -283,14 +287,14 @@ class Scan {
             @unknown default:
                 break
             }
-        }
+        }*/
     }
     
     func didTap(_ gesture: UITapGestureRecognizer) {
         if state == .ready {
             state = .defineBoundingBox
         }
-        
+        /*
         if state == .defineBoundingBox || state == .scanning {
             if gesture.state == .ended {
                 scannedObject.createOrMoveBoundingBox(screenPos: gesture.location(in: sceneView))
@@ -299,14 +303,14 @@ class Scan {
             if gesture.state == .ended {
                 scannedObject.origin?.flashOrReposition(screenPos: gesture.location(in: sceneView))
             }
-        }
+        }*/
     }
     
     func didPinch(_ gesture: ThresholdPinchGestureRecognizer) {
         if state == .ready {
             state = .defineBoundingBox
         }
-        
+        /*
         if state == .defineBoundingBox || state == .scanning {
             switch gesture.state {
             case .possible, .began:
@@ -333,7 +337,7 @@ class Scan {
             @unknown default:
                 break
             }
-        }
+        }*/
     }
     
     func updateOnEveryFrame(_ frame: ARFrame) {
@@ -410,9 +414,9 @@ class Scan {
     }
     
     var isReasonablySized: Bool {
-        guard let boundingBox = scannedObject.boundingBox else {
+        /*guard let boundingBox = scannedObject.boundingBox else {
             return false
-        }
+        }*/
         
         return true
         /*

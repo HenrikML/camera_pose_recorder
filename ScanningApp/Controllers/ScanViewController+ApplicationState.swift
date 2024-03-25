@@ -292,6 +292,9 @@ extension ScanViewController {
         if let scan = scan, scan.state == .defineBoundingBox {
             DispatchQueue.main.async {
                 self.enableSliders(isEnabled: true)
+                self.sliderTop.value = (scan.scannedObject.boundingBox?.extent.x ?? 0.25) * 2
+                self.sliderMid.value = (scan.scannedObject.boundingBox?.extent.y ?? 0.25) * 2
+                self.sliderBot.value = (scan.scannedObject.boundingBox?.extent.z ?? 0.25) * 2
                 self.nextButton.isEnabled = true
             }
         }

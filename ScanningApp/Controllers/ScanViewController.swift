@@ -662,8 +662,9 @@ class ScanViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate
     
     @objc
     func boundingBoxPositionOrExtentChanged(_ notification: Notification) {
-        guard let box = notification.object as? BoundingBox,
-            let cameraPos = sceneView.pointOfView?.simdWorldPosition else { return }
+        /*guard let box = notification.object as? BoundingBox,
+              let cameraPos = sceneView.pointOfView?.simdWorldPosition else { return }*/
+        guard let box = notification.object as? BoundingBox else { return }
         
         //let xString = String(format: "width: %.2f", box.extent.x)
         //let yString = String(format: "height: %.2f", box.extent.y)
@@ -673,6 +674,12 @@ class ScanViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate
         
         boundingBoxTransform = box.worldTransform
         boundingBoxExtent = box.extent
+        
+        DispatchQueue.main.async {
+            self.labelSliderTop.text = String(format: "%.2f m", box.extent.x)
+            self.labelSliderMid.text = String(format: "%.2f m", box.extent.y)
+            self.labelSliderBot.text = String(format: "%.2f m", box.extent.z)
+        }
     }
     
     @objc
@@ -682,43 +689,7 @@ class ScanViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate
         boundingBoxTransform = box.worldTransform
     }
     
-    enum SliderMode
-    {
-        case Scaling
-        case Rotation
-    }
-    
-    private var sliderModeValue : SliderMode = .Scaling
-    var sliderMode : SliderMode {
-        get {
-            return self.sliderModeValue
-        }
-        set {
-            var newMode = newValue
-            switch newMode {
-            case .Rotation:
-                buttonSwitchSliderMode.setTitle("Switch to scaling", for: .normal)
-                break
-            case .Scaling:
-                labelSliderTop.text = "\(boundingBoxExtent.x)"
-                labelSliderMid.text = "\(boundingBoxExtent.y)"
-                labelSliderBot.text = "\(boundingBoxExtent.z)"
-                buttonSwitchSliderMode.setTitle("Switch to rotating", for: .normal)
-                break
-            }
-            
-            sliderModeValue = newValue
-        }
-    }
-    
-    
-    
     func enableSliders(isEnabled: Bool) {
-        
-        if (isEnabled) {
-            self.sliderMode = .Scaling
-        }
-        
         self.sliderTop.isHidden = !isEnabled
         self.sliderTop.isEnabled = isEnabled
         self.labelSliderTop.isHidden = !isEnabled
@@ -731,61 +702,34 @@ class ScanViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate
         self.sliderBot.isEnabled = isEnabled
         self.labelSliderBot.isHidden = !isEnabled
         
-        buttonSwitchSliderMode.isHidden = !isEnabled
-        buttonSwitchSliderMode.isEnabled = isEnabled
+        buttonSwitchSliderMode.isHidden = true // Button is not used
+        buttonSwitchSliderMode.isEnabled = false // Button is not used
     }
-    
-    // TODO: Move world origin to bounding box corner
-    
+
+    // Button is not used
     @IBAction func buttonSwitchSliderModePressed(_ sender: Any) {
-        switch self.sliderModeValue {
-        case .Rotation:
-            self.sliderMode = .Scaling
-            break
-        case .Scaling:
-            self.sliderMode = .Rotation
-            break
-        }
         print("Switched slider mode")
     }
     
     @IBAction func sliderTopValueChanged(_ sender: Any) {
-        var sliderText : String
-        switch self.sliderMode {
-        case.Scaling:
-            sliderText = "\(boundingBoxExtent.x)"
-            break
-        case.Rotation:
-            sliderText = "\(sliderTop.value*360)"
-            break
-        }
-        labelSliderTop.text = sliderText
+        let newScale = SIMD3<Float>(x: sliderTop.value * 0.5,
+                                    y: sliderMid.value * 0.5,
+                                    z: sliderBot.value * 0.5)
+        scan?.setBoundingBoxScale(scale: newScale)
     }
     
     @IBAction func sliderMidValueChanged(_ sender: Any) {
-        var sliderText : String
-        switch self.sliderMode {
-        case.Scaling:
-            sliderText = "\(boundingBoxExtent.y)"
-            break
-        case.Rotation:
-            sliderText = "\(sliderMid.value*360)"
-            break
-        }
-        labelSliderMid.text = sliderText
+        let newScale = SIMD3<Float>(x: sliderTop.value * 0.5,
+                                    y: sliderMid.value * 0.5,
+                                    z: sliderBot.value * 0.5)
+        scan?.setBoundingBoxScale(scale: newScale)
     }
     
     @IBAction func sliderBotValueChanged(_ sender: Any) {
-        var sliderText : String
-        switch self.sliderMode {
-        case.Scaling:
-            sliderText = "\(boundingBoxExtent.z)"
-            break
-        case.Rotation:
-            sliderText = "\(sliderBot.value*360)"
-            break
-        }
-        labelSliderBot.text = sliderText
+        let newScale = SIMD3<Float>(x: sliderTop.value * 0.5,
+                                    y: sliderMid.value * 0.5,
+                                    z: sliderBot.value * 0.5)
+        scan?.setBoundingBoxScale(scale: newScale)
     }
     
     @objc
@@ -797,6 +741,8 @@ class ScanViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate
         let yString = String(format: "y: %.2f", node.position.y)
         let zString = String(format: "z: %.2f", node.position.z)
         displayMessage("Current local origin position in meters:\n\(xString) \(yString) \(zString)", expirationTime: 1.5)
+        
+        
         
     }
     

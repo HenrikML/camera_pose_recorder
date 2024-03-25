@@ -211,6 +211,19 @@ class ScannedObject: SCNNode {
         }
     }
     
+    func setBoundingBoxScale(scale : SIMD3<Float>) {
+        guard let boundingBox = boundingBox else { return }
+        
+        let oldYExtent = boundingBox.extent.y
+        boundingBox.extent = scale;
+        boundingBox.hasBeenAdjustedByUser = true
+        
+        // Correct y position so that the floor of the box remains at the same position.
+        let diffOnY = oldYExtent - boundingBox.extent.y
+        boundingBox.simdWorldPosition.y -= diffOnY / 2
+    }
+    
+    // Used for scaling with pinch gesture (disabled)
     func scaleBoundingBox(scale: CGFloat) {
         guard let boundingBox = boundingBox else { return }
         
