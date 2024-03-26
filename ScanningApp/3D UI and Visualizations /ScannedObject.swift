@@ -90,7 +90,6 @@ class ScannedObject: SCNNode {
             let origin = ObjectOrigin(extent: boundingBox.extent, sceneView)
             boundingBox.addChildNode(origin)
             self.origin = origin
-            
             NotificationCenter.default.post(name: ScannedObject.boundingBoxCreatedNotification, object: nil)
         }
     }

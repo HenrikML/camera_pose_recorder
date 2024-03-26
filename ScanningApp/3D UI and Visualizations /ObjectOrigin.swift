@@ -72,7 +72,7 @@ class ObjectOrigin: SCNNode {
                                                name: Scan.stateChangedNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(self.boundingBoxExtentChanged(_:)),
                                                name: BoundingBox.extentChangedNotification, object: nil)
-        isHidden = true
+        isHidden = false
     }
     
     func set3DModel(_ url: URL?, extentForScaling: SIMD3<Float>?=nil) {
@@ -294,9 +294,9 @@ class ObjectOrigin: SCNNode {
         guard let state = notification.userInfo?[Scan.stateUserInfoKey] as? Scan.State else { return }
         switch state {
         case .ready, .defineBoundingBox, .scanning:
-            self.isHidden = true
+            self.isHidden = false
         case .adjustingOrigin:
-            self.isHidden = true
+            self.isHidden = false
         }
     }
     

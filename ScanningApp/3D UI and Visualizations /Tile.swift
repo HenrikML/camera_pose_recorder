@@ -14,15 +14,15 @@ class Tile: SCNNode {
     var isHighlighted: Bool = false
     
     func updateVisualization() {
-        var newOpacity: CGFloat = isCaptured ? 0.5 : 0.0
-        newOpacity += isHighlighted ? 0.35 : 0.0
+        var newOpacity: CGFloat = isCaptured ? 0.5 : 0.20
+        newOpacity += isHighlighted ? 0.35 : 0.20
         opacity = newOpacity
     }
     
     init(_ plane: SCNPlane) {
         super.init()
         self.geometry = plane
-        self.opacity = 0.0
+        self.opacity = 0.20
         
         // Create a child node with another plane of the same size, but a darker color to stand out better.
         // This helps users see captured tiles from the back.

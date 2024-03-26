@@ -17,7 +17,7 @@ class BoundingBox: SCNNode {
     static let scanPercentageUserInfoKey = "ScanPercentage"
     static let boxExtentUserInfoKey = "BoxExtent"
     
-    var extent = SIMD3<Float>(0.1, 0.1, 0.1) {
+    var extent = SIMD3<Float>(0.05, 0.05, 0.05) {
         didSet {
             extent = max(extent, minSize)
             updateVisualization()
