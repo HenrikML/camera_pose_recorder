@@ -14,6 +14,7 @@ class SettingsViewController: UIViewController {
 
     @IBOutlet weak var toggleAutoFocus: UISwitch!
     
+    @IBOutlet weak var toggleWorldOriginToBBOrigin: UISwitch!
     @IBOutlet weak var videoFormatButton: UIButton! {
         didSet {
             print(videoFormatButton.title)
@@ -30,6 +31,7 @@ class SettingsViewController: UIViewController {
         
         toggleAutoFocus.setOn(UserDefaults.standard.bool(forKey: "auto_focus"), animated: false)
         toggleWorldOrigin.setOn(UserDefaults.standard.bool(forKey: "world_origin"), animated: false)
+        toggleWorldOriginToBBOrigin.setOn(UserDefaults.standard.bool(forKey: "world_origin_to_bb_origin"), animated: false)
 
         // Do any additional setup after loading the view.
     }
@@ -79,6 +81,9 @@ class SettingsViewController: UIViewController {
         UserDefaults.standard.setValue(sender.isOn, forKey: "world_origin")
     }
     
+    @IBAction func isToggledWOToBBOrigin(_ sender: UISwitch) {
+        UserDefaults.standard.setValue(sender.isOn, forKey: "world_origin_to_bb_origin")
+    }
     @IBAction func isToggledAutoFocus(_ sender: UISwitch) {
         UserDefaults.standard.setValue(sender.isOn, forKey: "auto_focus")
     }

@@ -50,6 +50,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             UserDefaults.standard.setValue(false, forKey: "world_origin")
         }
         
+        if UserDefaults.standard.object(forKey: "world_origin_to_bb_origin") == nil {
+            UserDefaults.standard.setValue(false, forKey: "world_origin_to_bb_origin")
+        }
+        
         return true
     }
     

@@ -539,6 +539,7 @@ class ScanViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate
         }
     }
     
+    
     func session(_ session: ARSession, didUpdate frame: ARFrame) {
         if let recorder = videoRecorder {
             if captureStateValue == .capturing, recorder.isRecording {
@@ -676,9 +677,9 @@ class ScanViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate
         boundingBoxExtent = box.extent
         
         DispatchQueue.main.async {
-            self.labelSliderTop.text = String(format: "%.2f m", box.extent.x)
-            self.labelSliderMid.text = String(format: "%.2f m", box.extent.y)
-            self.labelSliderBot.text = String(format: "%.2f m", box.extent.z)
+            self.labelSliderTop.text = String(format: "%.3f m", box.extent.x)
+            self.labelSliderMid.text = String(format: "%.3f m", box.extent.y)
+            self.labelSliderBot.text = String(format: "%.3f m", box.extent.z)
         }
     }
     

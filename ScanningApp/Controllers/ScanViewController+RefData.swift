@@ -17,10 +17,30 @@ extension ScanViewController
         case capturing
     }
     
+    func moveWorldOrigin() {
+        
+        if !UserDefaults.standard.bool(forKey: "world_origin_to_bb_origin")
+        {
+            return
+        }
+        
+        guard let bb = self.scan?.scannedObject else { return }
+        
+        let bb_transform : simd_float4x4 = simd_float4x4(bb.worldTransform)
+        self.sceneView.session.setWorldOrigin(relativeTransform: bb_transform)
+        
+        let diag = SIMD4<Float>(repeating: 1.0)
+        
+        bb.simdWorldTransform = simd_float4x4(diagonal: diag)
+        bb.boundingBox?.simdWorldTransform = simd_float4x4(diagonal: diag)
+        
+        
+    }
+    
     func startReferenceDataCapture() {
         frameCount = 0
         
-        
+        moveWorldOrigin()
         
         if createRefDataDirectory() {
             writeBoundingBoxData()
@@ -76,6 +96,7 @@ extension ScanViewController
         // Initialize RGB extrinsics file
         guard let rgbExtFilename = self.folderURL?.appendingPathComponent(transformMatrixFileName) else { return false }
         let rgbExtHeader = "frame," +
+        "Rx_yaw,Ry_pitch,Rz_roll," +
         "m_11,m_21,m_31,m_41," +
         "m_12,m_22,m_32,m_42," +
         "m_13,m_23,m_33,m_43," +
@@ -88,10 +109,13 @@ extension ScanViewController
         // Initialize bounding box file
         guard let bbFilename = self.folderURL?.appendingPathComponent(boundingBoxFileName) else { return false }
         let bbHeader = "extent_x,extent_y,extent_z," +
+        "quat_x,quat_y,quat_z,quat_w," +
         "m_11,m_21,m_31,m_41," +
         "m_12,m_22,m_32,m_42," +
         "m_13,m_23,m_33,m_43," +
         "m_14,m_24,m_34,m_44\n"
+        
+        
         
         do {
             try bbHeader.write(to: bbFilename, atomically: true, encoding: .utf8)
@@ -225,7 +249,8 @@ extension ScanViewController
             //let viewPortSize = CGSize(width: 1920, height: 1440)
             
             self.writeRGBCameraIntrinsics(intrinsics: frame.camera.intrinsics, frame: index)
-            self.write4x4Matrix(matrix: frame.camera.transform, 
+            self.writeTransform(matrix: frame.camera.transform,
+                                rotation: frame.camera.eulerAngles,
                                 frame: index,
                                 fileName: transformMatrixFileName)
         }
@@ -246,11 +271,13 @@ extension ScanViewController
         } catch {}
     }
     
-    func write4x4Matrix(matrix: simd_float4x4, frame: UInt, fileName: String) {
+    func writeTransform(matrix: simd_float4x4, rotation: simd_float3, frame: UInt, fileName: String) {
         guard let filename = self.folderURL?.appendingPathComponent(fileName) else { return }
         
-        //frame,m_11,m_12,m_13,m_14,m_21,m_22,m_23,m_24,m_31,m_32,m_33,m_34,m_41,m_42,m_43,m_44
+        //frame,quat_x, quat_y, quat_z, quat_w, m_11,m_12,m_13,m_14,m_21,m_22,m_23,m_24,m_31,m_32,m_33,m_34,m_41,m_42,m_43,m_44
+        
         let data = "\(frame)," +
+        "\(rotation.x),\(rotation.y),\(rotation.z)," +
             "\(matrix.columns.0.x),\(matrix.columns.1.x),\(matrix.columns.2.x),\(matrix.columns.3.x)," +
             "\(matrix.columns.0.y),\(matrix.columns.1.y),\(matrix.columns.2.y),\(matrix.columns.3.y)," +
             "\(matrix.columns.0.z),\(matrix.columns.1.z),\(matrix.columns.2.z),\(matrix.columns.3.z)," +
@@ -264,12 +291,20 @@ extension ScanViewController
     func writeBoundingBoxData() {
         guard let filename = self.folderURL?.appendingPathComponent("bounding_box.txt") else { return }
         
+        guard let bb = self.scan?.scannedObject.boundingBox else { return }
+        
         //extent_x,extent_y,extent_z,m_11,m_21,m_31,m_41,m_12,m_22,m_32,m_42,m_13,m_23,m_33,m_43,m_14,m_24,m_34,m_44
-        let data = "\(boundingBoxExtent.x),\(boundingBoxExtent.y),\(boundingBoxExtent.z)," +
-        "\(boundingBoxTransform.m11),\(boundingBoxTransform.m21),\(boundingBoxTransform.m31),\(boundingBoxTransform.m41)," +
-        "\(boundingBoxTransform.m12),\(boundingBoxTransform.m22),\(boundingBoxTransform.m32),\(boundingBoxTransform.m42)," +
-        "\(boundingBoxTransform.m13),\(boundingBoxTransform.m23),\(boundingBoxTransform.m33),\(boundingBoxTransform.m43)," +
-        "\(boundingBoxTransform.m14),\(boundingBoxTransform.m24),\(boundingBoxTransform.m34),\(boundingBoxTransform.m44)\n"
+        
+        let extent = bb.extent
+        let quat = bb.worldOrientation
+        let transform = bb.worldTransform
+        
+        let data = "\(extent.x),\(extent.y),\(extent.z)," +
+        "\(quat.x),\(quat.y),\(quat.z),\(quat.w)," +
+        "\(transform.m11),\(transform.m21),\(transform.m31),\(transform.m41)," +
+        "\(transform.m12),\(transform.m22),\(transform.m32),\(transform.m42)," +
+        "\(transform.m13),\(transform.m23),\(transform.m33),\(transform.m43)," +
+        "\(transform.m14),\(transform.m24),\(transform.m34),\(transform.m44)\n"
         
         do {
             try data.appendToURL(fileURL: filename)

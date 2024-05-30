@@ -169,7 +169,7 @@ extension ScanViewController {
                 self.displayInstruction(Message("Position and resize bounding box using gestures.\n" +
                     "Long press sides to push/pull them in or out. "))*/
                 self.setNavigationBarTitle("Define bounding box")
-                self.showBackButton(true)
+                self.showBackButton(false)
                 self.nextButton.isEnabled = scan.boundingBoxExists
                 self.loadModelButton.isHidden = true
                 self.flashlightButton.isHidden = true
@@ -185,7 +185,7 @@ extension ScanViewController {
                 } else {
                     self.setNavigationBarTitle("Scan 0%")
                 }
-                self.showBackButton(true)
+                self.showBackButton(false)
                 self.nextButton.isEnabled = true
                 self.loadModelButton.isHidden = true
                 self.flashlightButton.isHidden = true
